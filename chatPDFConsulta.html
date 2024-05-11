@@ -159,7 +159,7 @@
         alert("No se encontro un id De Origen. Porfavor selecciona un PDF primero");
         return;
       }
-    console.log(question)
+
       fetch("https://api.chatpdf.com/v1/chats/message", {
         method: 'POST',
         headers: {
@@ -167,20 +167,26 @@
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          role: "user", // El rol es un string.
-        messages: [{ "role": "user", 
-        "content": question }], // 'messages' ahora es un array de objetos.
-        sourceId: sourceId // 'sourceId' es un string.
-    })
+          role: "user",
+          messages: [{ "role": "user", "content": question }],
+          sourceId: sourceId
+        })
       })
       .then(response => response.json())
       .then(data => {
         document.getElementById('response').value = JSON.stringify(data, null, 2);
+        speakDescription(); // Método para leer la respuesta. Es el mismo que ya tenia el proyecto pero modificado por si acaso
       })
       .catch(error => {
         console.error("Error:", error);
         alert("Error al realizar la pregunta");
       });
+    }
+
+    function speakDescription() {
+      const responseText = document.getElementById('response').value;
+      const valueSpeech = new SpeechSynthesisUtterance(responseText);
+      window.speechSynthesis.speak(valueSpeech);
     }
 </script>
 </body>
