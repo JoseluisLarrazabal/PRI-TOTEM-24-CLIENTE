@@ -78,9 +78,8 @@
 <body>
 <div class="container">
   <h1>SUBIDA DE ARCHIVOS PDF</h1>
-  <input type="file" id="fileInput" accept=".pdf">
+  <input type="file" id="fileInput" accept=".pdf" onchange="uploadOrProvidePDF()">
   <input type="text" id="urlInput" placeholder="Ingresa una Url de PDF">
-  <button onclick="uploadOrProvidePDF()">Sube o provee el Archivo PDF</button>
   <textarea id="response" class="response" placeholder="Respuestas de la api apareceran aqui" readonly></textarea>
   <input type="text" id="question" placeholder="Realiza Una Pregunta...">
   <button onclick="askQuestion()">Preguntar</button>
@@ -125,7 +124,6 @@
       })
       .then(response => response.json())
       .then(data => {
-        console.log(file)
         document.getElementById('response').value = JSON.stringify(data, null, 2);
       })
       .catch(error => {
@@ -161,23 +159,22 @@
         alert("No se encontro un id De Origen. Porfavor selecciona un PDF primero");
         return;
       }
-
-      const request = {
-        'question': question,
-        'sourceId': sourceId
-      }
-    
+    console.log(question)
       fetch("https://api.chatpdf.com/v1/chats/message", {
         method: 'POST',
         headers: {
           "x-api-key": apiKey, 
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(request)
+        body: JSON.stringify({
+          role: "user", // El rol es un string.
+        messages: [{ "role": "user", 
+        "content": question }], // 'messages' ahora es un array de objetos.
+        sourceId: sourceId // 'sourceId' es un string.
+    })
       })
       .then(response => response.json())
       .then(data => {
-        console.log(question,"//" ,sourceId)
         document.getElementById('response').value = JSON.stringify(data, null, 2);
       })
       .catch(error => {
@@ -185,7 +182,6 @@
         alert("Error al realizar la pregunta");
       });
     }
-    </script>
-    </body>
-    </html>
-    
+</script>
+</body>
+</html>
