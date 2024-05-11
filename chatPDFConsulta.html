@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INTERACTUA CON TU PDF!!</title>
+<style>
+  body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f0f0f0;
+  }
+
+  .container {
+    width: 90%;
+    max-width: 600px;
+    padding: 20px;
+    border-radius: 8px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+
+  h1 {
+    color: #333;
+    margin-bottom: 24px;
+  }
+
+  input[type="file"],
+  input[type="text"],
+  textarea,
+  button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 8px;
+    margin-bottom: 16px;
+    box-sizing: border-box;
+    border: 2px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+  }
+
+  input[type="file"]:hover,
+  input[type="text"]:hover,
+  textarea:hover,
+  button:hover {
+    border-color: #0056b3;
+  }
+
+  button {
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  button:hover {
+    background-color: #0056b3;
+  }
+
+  .response {
+    height: 150px;
+    resize: none;
+  }
+
+  textarea[readonly] {
+    background-color: #e9ecef;
+    color: #495057;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>SUBIDA DE ARCHIVOS PDF</h1>
+  <input type="file" id="fileInput" accept=".pdf">
+  <input type="text" id="urlInput" placeholder="Ingresa una Url de PDF">
+  <button onclick="uploadOrProvidePDF()">Sube o provee el Archivo PDF</button>
+  <textarea id="response" class="response" placeholder="Respuestas de la api apareceran aqui" readonly></textarea>
+  <input type="text" id="question" placeholder="Realiza Una Pregunta...">
+  <button onclick="askQuestion()">Preguntar</button>
+</div>
+
+<script>
+    const apiKey = "sec_6Iv3eMYHKFN3Qkdwa6rF70GRcAaRgoK6";  
+    
+    function uploadOrProvidePDF() {
+      const fileInput = document.getElementById('fileInput');
+      const urlInput = document.getElementById('urlInput');
+      const file = fileInput.files[0];
+      const pdfUrl = urlInput.value.trim();
+    
+      if (!file && pdfUrl === "") {
+        alert("Porfavor selecciona un archivo PDF o ingresa una url PDF");
+        return;
+      }
+    
+      if (file && pdfUrl !== "") {
+        alert("Por favor, seleccione un archivo PDF o proporcione una URL de PDF, no ambos.");
+        return;
+      }
+    
+      if (file) {
+        uploadPDF(file);
+      } else {
+        uploadPDFFromUrl(pdfUrl);
+      }
+    }
+    
+    function uploadPDF(file) {
+      const formData = new FormData();
+      formData.append('file', file);
+    
+      fetch("https://api.chatpdf.com/v1/sources/add-file", {
+        method: 'POST',
+        headers: {
+          "x-api-key": apiKey  
+        },
+        body: formData
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log(file)
+        document.getElementById('response').value = JSON.stringify(data, null, 2);
+      })
+      .catch(error => {
+        console.error("Error:", error);
+        alert("ERROR AL SUBIR EL ARCHIVO PDF");
+      });
+    }
+    
+    function uploadPDFFromUrl(pdfUrl) {
+      fetch("https://api.chatpdf.com/v1/sources/add-url", {
+        method: 'POST',
+        headers: {
+          "x-api-key": apiKey,  
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({url: pdfUrl})
+      })
+      .then(response => response.json())
+      .then(data => {
+        document.getElementById('response').value = JSON.stringify(data, null, 2);
+      })
+      .catch(error => {
+        console.error("Error:", error);
+        alert("Error al subir tu archivo PDF desde una URL");
+      });
+    }
+    
+    function askQuestion() {
+      const question = document.getElementById('question').value;
+      const sourceId = JSON.parse(document.getElementById('response').value)?.sourceId;
+    
+      if (!sourceId) {
+        alert("No se encontro un id De Origen. Porfavor selecciona un PDF primero");
+        return;
+      }
+
+      const request = {
+        'question': question,
+        'sourceId': sourceId
+      }
+    
+      fetch("https://api.chatpdf.com/v1/chats/message", {
+        method: 'POST',
+        headers: {
+          "x-api-key": apiKey, 
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(request)
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log(question,"//" ,sourceId)
+        document.getElementById('response').value = JSON.stringify(data, null, 2);
+      })
+      .catch(error => {
+        console.error("Error:", error);
+        alert("Error al realizar la pregunta");
+      });
+    }
+    </script>
+    </body>
+    </html>
+    
