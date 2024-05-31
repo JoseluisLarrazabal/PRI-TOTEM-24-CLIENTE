@@ -1,10 +1,40 @@
 import axios from "axios"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import connectionString from "../../components/connections/connection"
 import { useParams } from "react-router-dom"
+import useSpeechRecognition from "../../components/hooks/useSpeechRecognition"
 
 function ChatTotem() {
 
+    let query = ''
+
+    let globalSource = ''
+
+    const [time, SetTime] = useState(50);
+    const {
+        text,
+        startListening,
+        stopListening,
+        hasRecognitionSupport,
+        isListening
+    } = useSpeechRecognition(handleSubmit)
+
+    function handleSubmit(textToSearch) {
+        SetTime(3000);
+        query = textToSearch.split(" ");
+        setInput(query)
+    }
+
+    function handleEnterPress() {
+        if (isListening) {
+            stopListening();
+        } else {
+            startListening();
+        }
+        setIsListening(!isListening);
+    }
+
+    let keys = null;
     const { id } = useParams()
     const [loading, setLoading] = useState(true)
     const [input, setInput] = useState('')
@@ -14,8 +44,30 @@ function ChatTotem() {
     const [response, setResponse] = useState("");
 
     const apiKey = "sec_6Iv3eMYHKFN3Qkdwa6rF70GRcAaRgoK6"
+    const searchParams = new URLSearchParams(window.location.search)
+
+    keys = searchParams.get('keys') === null ? null : searchParams.get('keys').toString()
+    const cleannedString = keys.replace(/,/g, ' ')
 
     useEffect(() => {
+        const handleKeyDown = (event) => {
+            if (event.key === 'Enter') {
+                window.speechSynthesis.cancel();
+                handleEnterPress();
+            } else if (event.code === 'Space') {
+                setTimeout(() => {
+
+                }, 3000)
+                console.log('Se presiono espacio')
+                handleSendMessage()
+            }
+        };
+
+        document.addEventListener('keydown', handleKeyDown);
+        window.removeEventListener('keydown', handleKeyDown);
+
+        let sourceC = null
+        let message = null
         const fetchAndUploadFiles = async () => {
             try {
                 const response = await axios.get(`${connectionString}/Archivo/FilesContent/${id}`);
@@ -23,19 +75,20 @@ function ChatTotem() {
                 await Promise.all(
                     base64Files.map(async (file) => {
                         const fileBlob = base64ToBlob(file.contenidoArchivo, 'application/pdf');
-                        await uploadPDF(fileBlob, file.NombreArchivo);
+                        sourceC = await uploadPDF(fileBlob, file.NombreArchivo);
+                        globalSource = sourceC
+                        message = cleannedString
                     })
                 );
-
                 setLoading(false);
             } catch (error) {
                 console.error('Error fetching and uploading files:', error);
                 setLoading(false);
             }
+            InitMessage(sourceC, message)
         };
-
         fetchAndUploadFiles();
-    }, [id])
+    }, [])
 
     const base64ToBlob = (base64, contentType) => {
         const byteCharacters = atob(base64);
@@ -55,18 +108,23 @@ function ChatTotem() {
             }
         };
 
-        await axios.post("https://api.chatpdf.com/v1/sources/add-file", formData, config)
-            .then(res => {
-                setSourceId(res.data)
-            })
-            .catch(err => console.error("No se pudo cargar los archivos", err))
+        try {
+            const rest = await axios.post("https://api.chatpdf.com/v1/sources/add-file", formData, config)
+            setSourceId(rest.data.sourceId)
+            return rest.data.sourceId
+        } catch (e) {
+            console.log(e)
+        }
+
     }
 
-    const handleSendMessage = () => {
-
-        if (sourceId === null) {
+    const InitMessage = (sourceI, message) => {
+        if (sourceI === null) {
             alert("No se encontro un id De Origen. Porfavor selecciona un PDF primero");
         } else {
+            console.log(apiKey)
+            console.log(sourceI)
+            console.log(message)
             fetch("https://api.chatpdf.com/v1/chats/message", {
                 method: 'POST',
                 headers: {
@@ -75,8 +133,38 @@ function ChatTotem() {
                 },
                 body: JSON.stringify({
                     role: "user",
-                    messages: [{ "role": "user", "content": input }],
-                    sourceId: sourceId.sourceId
+                    messages: [{ "role": "user", "content": message }],
+                    sourceId: sourceI
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    setResponse(data.content)
+                    speakDescription(data.content)
+                })
+                .catch(err => console.error(err))
+        }
+    }
+
+    const handleSendMessage = () => {
+        if (sourceId === null) {
+            alert("No se encontro un id De Origen. Porfavor selecciona un PDF primero");
+        } else {
+            let textAux = ""
+            query.forEach(element => {
+                textAux += element + " "
+            });
+            console.log(textAux)
+            fetch("https://api.chatpdf.com/v1/chats/message", {
+                method: 'POST',
+                headers: {
+                    "x-api-key": apiKey,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    role: "user",
+                    messages: [{ "role": "user", "content": textAux }],
+                    sourceId: globalSource
                 })
             })
                 .then(res => res.json())
