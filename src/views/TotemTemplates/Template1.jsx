@@ -59,8 +59,8 @@ export function Template1() {
 
     // Eliminar símbolos de las palabras en filteredKeys
     filteredKeys = filteredKeys.map(item => item.replace(new RegExp(`[${signs.join('')}]`, 'g'), ''));
-
-    navigate('/Template?keys=' + filteredKeys.toString());
+    //navigate('/Template?keys=' + filteredKeys.toString());
+    navigate(`/ChatTotem/${totem.idTotem}?keys=${filteredKeys.toString()}`)
   }
 
   const handleEnterPress = (event) => {
@@ -171,8 +171,8 @@ export function Template1() {
                   </Typography>
                 </div>
                 <div class="mb-6">
-                  <label for="default-input" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"></label>
-                  <input type="text" id="default-input" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  <label for="default-input" className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"></label>
+                  <input type="text" id="default-input" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                     placeholder="Buscar..."
                     value={text}
                     onChange={(event) => SetBrowse(event.target.value)} />
@@ -203,15 +203,6 @@ export function Template1() {
                     </div>
                   </div>
                 </div>
-                <p className="mt-4">
-                  <button
-                    onClick={() => {
-                      navigate(`/ChatTotem/${totem.idTotem}`)
-                    }}
-                    className="bg-blue-500 rounded px-4 py-2 text-white">
-                    Preguntar al totem
-                  </button>
-                </p>
               </div>
             </div>
           </div>
