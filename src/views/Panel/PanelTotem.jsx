@@ -34,8 +34,63 @@ const PanelTotem = () => {
         MySwal.fire("Eliminado", "YSe elimino el totem correctamente", "success");
         navigate("/Panel");
       })
-      .then((data) => {})
+      .then((data) => { })
       .catch((error) => console.log(error));
+  };
+
+  const handleUploadFile = (id, file) => {
+    const formData = new FormData()
+    formData.append("file", file)
+    MySwal.fire({
+      title: 'Subiendo archivo...',
+      html: `
+        <div class="progress-bar-wrapper">
+          <div id="progress-bar" class="progress-bar" style="width: 0%; height: 20px; background-color: #3085d6;"></div>
+        </div>
+      `,
+      showCancelButton: false,
+      showConfirmButton: false,
+      allowOutsideClick: false,
+      didOpen: () => {
+        MySwal.showLoading();
+        axios.post(`${connectionString}/Archivo/${id}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+          onUploadProgress: (progressEvent) => {
+            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            const progressBar = document.getElementById('progress-bar');
+            if (progressBar) {
+              progressBar.style.width = `${progress}%`;
+            }
+          }
+        })
+          .then(res => {
+            if (res.status === 201) {
+              MySwal.fire({
+                icon: 'success',
+                title: 'Éxito',
+                text: 'Archivo subido exitosamente',
+                confirmButtonColor: "#3085d6"
+              });
+            } else {
+              MySwal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo subir el archivo',
+                confirmButtonColor: "#d33"
+              });
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            MySwal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'Ocurrió un error al subir el archivo',
+              confirmButtonColor: "#d33"
+            });
+          });
+      }
+    });
   };
 
   useEffect(() => {
@@ -86,26 +141,60 @@ const PanelTotem = () => {
           {totems.map(({ idTotem, urlLogo, nombre }) => (
             <div>
               {user.loginMode === "admin" && (
-                <button
-                  onClick={() =>
-                    MySwal.fire({
-                      title: "¿Deseas eliminar este totem?",
-                      text: "Todas sus locaciónes y publicidades seran eliminadas tambien",
-                      icon: "warning",
-                      showCancelButton: true,
-                      confirmButtonColor: "#3085d6",
-                      cancelButtonColor: "#d33",
-                      confirmButtonText: "Eliminar",
-                    }).then((result) => {
-                      if (result.isConfirmed) {
-                        handleDelete(idTotem);
-                      }
-                    })
-                  }
-                  className="text-white text-xs font-bold rounded-t-lg bg-red-500 inline-block mt--4 ml-80 py-3 px-7 cursor-pointer"
-                >
-                  Eliminar
-                </button>
+                <>
+                  <button
+                    onClick={() =>
+                      MySwal.fire({
+                        title: "Subir archivo PDF",
+                        text: "Elija un archivo PDF",
+                        html: `<div class="flex justify-center items-center">
+                                <input type="file" id="pdfFile" class="swal2-input" accept=".pdf" />
+                              </div>`,
+                        showCancelButton: true,
+                        confirmButtonColor: "#3085d6",
+                        cancelButtonColor: "#d33",
+                        confirmButtonText: "Subir",
+                        preConfirm: () => {
+                          const fileInput = document.getElementById('pdfFile');
+                          if (fileInput.files.length === 0) {
+                            Swal.showValidationMessage('Por favor, selecciona un archivo PDF');
+                            return false;
+                          }
+                          return fileInput.files[0];
+                        }
+                      }).then((result) => {
+                        if (result.isConfirmed) {
+                          const file = result.value;
+                          handleUploadFile(idTotem, file)
+                        }
+                      })
+                    }
+                    className="text-white text-xs font-bold rounded-t-lg bg-blue-500 inline-block mt--4 ml-80 py-3 px-7 cursor-pointer"
+                  >
+                    Subir PDF
+                  </button>
+                  <button
+                    onClick={() =>
+                      MySwal.fire({
+                        title: "¿Deseas eliminar este totem?",
+                        text: "Todas sus locaciónes y publicidades seran eliminadas tambien",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#3085d6",
+                        cancelButtonColor: "#d33",
+                        confirmButtonText: "Eliminar",
+                      }).then((result) => {
+                        if (result.isConfirmed) {
+                          handleDelete(idTotem);
+                        }
+                      })
+                    }
+                    className="text-white text-xs font-bold rounded-t-lg bg-red-500 inline-block mt--4 ml-1 py-3 px-7 cursor-pointer"
+                  >
+                    Eliminar
+                  </button>
+                </>
+
               )}
               <a
                 onClick={() => {

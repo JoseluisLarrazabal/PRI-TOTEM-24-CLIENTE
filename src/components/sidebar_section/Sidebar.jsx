@@ -1,7 +1,7 @@
 import React from "react";
 import "./sidebar.css";
 /*import icons */
-import { MdEditLocationAlt } from "react-icons/md";
+import { MdEditLocationAlt, MdFileOpen } from "react-icons/md";
 import { HiTemplate, HiHome } from "react-icons/hi";
 import { MdContactMail } from "react-icons/md";
 import { BsQuestionCircle } from "react-icons/bs";
@@ -51,6 +51,12 @@ const Sidebar = () => {
       path: `/Publicidad/:${totem === null ? 0 : totem.idTotem}`,
     },
     {
+      name: "Archivos",
+      current: false,
+      icon: MdFileOpen,
+      path: `/ArchivosTotem/:${totem === null ? 0 : totem.idTotem}`
+    },
+    {
       name: "Editar Información",
       current: false,
       icon: HiTemplate,
@@ -81,7 +87,8 @@ const Sidebar = () => {
     location.pathname === "/SuperAdminView" ||
     location.pathname === "/TotemNew" ||
     location.pathname === "/TotemAdvertising" ||
-    location.pathname === "/Template"
+    location.pathname === "/Template" ||
+    /^\/ChatTotem\/\d+$/.test(location.pathname)
   ) {
     return null; // Retorna null para ocultar el sidebar
   }
@@ -106,7 +113,7 @@ const Sidebar = () => {
               src={
                 totem === null
                   ? "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_960_720.png"
-                  :  totem.urlLogo
+                  : totem.urlLogo
               }
               alt=""
             />

@@ -22,37 +22,41 @@ import DisplayTotem from "../../views/TotemTemplates/DisplayTotem";
 import SuperAdminView from "../../views/SuperAdmin/SuperAdminView";
 import EditLocacion from "../../views/Forms/EditLocaciones";
 import TotemAdvertising from "../../views/Advertising/TotemAdvertising";
+import ArchivosTotem from "../../views/Forms/ArchivosTotem"
+import ChatTotem from "../../views/ChatPDF/ChatTotem"
 
 const Routing = () => {
   const user = useSelector((state) => state.user);
   return (
-      <Routes>
-        <Route element={<PrivateRoute token={user.token}/>}>
-          <Route path="/Panel" element={<PanelTotem />} />
-          <Route path="/Publicidad/:id" element={<AdvertisingDisplay />} />
-          <Route path="/Locaciones" element={<FormLocation />} />
-          <Route path="/ListaLocaciones/:id" element={<LocacionesTable />} />
-          <Route path="/Plantillas" element={<SeleccionPlantilla />} />
-          <Route path="/Logos" element={<Logos />} />
-          <Route path="/EditLocacion/:id" element={ <EditLocacion/>} />
-          {/*<Route path="/AdminForm" element={<AdminForm />} />
+    <Routes>
+      <Route element={<PrivateRoute token={user.token} />}>
+        <Route path="/Panel" element={<PanelTotem />} />
+        <Route path="/Publicidad/:id" element={<AdvertisingDisplay />} />
+        <Route path="/Locaciones" element={<FormLocation />} />
+        <Route path="/ListaLocaciones/:id" element={<LocacionesTable />} />
+        <Route path="/Plantillas" element={<SeleccionPlantilla />} />
+        <Route path="/Logos" element={<Logos />} />
+        <Route path="/EditLocacion/:id" element={<EditLocacion />} />
+        {/*<Route path="/AdminForm" element={<AdminForm />} />
           <Route path="/TotemForm" element={<TotemForm />} />*/}
-          <Route path="/TotemNew" element={<TotemForm />} />
-          <Route path="/TotemEdit/:id" element={<TotemEdit/>} />
-          <Route path="/Locaciones" element={<FormLocation />} />
-          <Route path="/UserUpdateForm" element={<UserUpdateForm />} />
-          <Route path="/UserUpdateForm" element={<UserUpdateForm />} />
-          <Route path="/SuperAdminView" element={<SuperAdminView />} />
-        
-        </Route>
+        <Route path="/TotemNew" element={<TotemForm />} />
+        <Route path="/TotemEdit/:id" element={<TotemEdit />} />
+        <Route path="/ArchivosTotem/:id" element={<ArchivosTotem />} />
+        <Route path="/Locaciones" element={<FormLocation />} />
+        <Route path="/UserUpdateForm" element={<UserUpdateForm />} />
+        <Route path="/UserUpdateForm" element={<UserUpdateForm />} />
+        <Route path="/SuperAdminView" element={<SuperAdminView />} />
 
-        <Route index element={<Login />} />
-        <Route path="/ForgotPassword" element={<ForgotPassword />} />
-        <Route path="/Totems" element={<SelectTotem/>} />
-        <Route path="/Template" element={<DisplayTotem/>} />
-        <Route path="/TotemAdvertising" element={<TotemAdvertising/>} />
-        <Route path="*" element={<Navigate to="/" replace/>} />
-      </Routes>
+      </Route>
+
+      <Route index element={<Login />} />
+      <Route path="/ForgotPassword" element={<ForgotPassword />} />
+      <Route path="/Totems" element={<SelectTotem />} />
+      <Route path="/Template" element={<DisplayTotem />} />
+      <Route path="/ChatTotem/:id" element={<ChatTotem />} />
+      <Route path="/TotemAdvertising" element={<TotemAdvertising />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 };
 
