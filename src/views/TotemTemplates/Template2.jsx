@@ -159,7 +159,7 @@ export function Template2() {
           <Carrusel
             className="carrusel"
             images={imagesFinal == null ? pics : imagesFinal}
-            data = {imagesFinal}
+            data={imagesFinal}
           />
           <div className="to-bg-black-10 absolute inset-0 h-full w-full bg-gradient-to-t from-black/80 via-black/50" />
         </CardHeader>
@@ -180,9 +180,9 @@ export function Template2() {
               class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
             ></label>
             <input type="text" id="default-input" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    placeholder="Buscar..."
-                    value={text}
-                    onChange={(event) => SetBrowse(event.target.value)} />
+              placeholder="Buscar..."
+              value={text}
+              onChange={(event) => SetBrowse(event.target.value)} />
           </div>
           <Avatar
             size="xl"
@@ -227,6 +227,15 @@ export function Template2() {
             </Typography>
           </CardBody>
         </Card>
+        <p className="mt-4">
+          <button
+            onClick={() => {
+              navigate(`/ChatTotem/${totem.idTotem}`)
+            }}
+            className="bg-blue-500 rounded px-4 py-2 text-white">
+            Preguntar al totem
+          </button>
+        </p>
       </section>
       <footer className="w-full h-10 bg-gray-900 p-8 inset-x-0 bottom-0">
         <div className="flex flex-row flex-wrap items-center justify-center gap-x-12 gap-y-6 text-center text-white md:justify-between">
