@@ -23,7 +23,6 @@ import SuperAdminView from "../../views/SuperAdmin/SuperAdminView";
 import EditLocacion from "../../views/Forms/EditLocaciones";
 import TotemAdvertising from "../../views/Advertising/TotemAdvertising";
 import ArchivosTotem from "../../views/Forms/ArchivosTotem"
-import ChatTotem from "../../views/ChatPDF/ChatTotem"
 
 const Routing = () => {
   const user = useSelector((state) => state.user);
@@ -53,7 +52,6 @@ const Routing = () => {
       <Route path="/ForgotPassword" element={<ForgotPassword />} />
       <Route path="/Totems" element={<SelectTotem />} />
       <Route path="/Template" element={<DisplayTotem />} />
-      <Route path="/ChatTotem/:id" element={<ChatTotem />} />
       <Route path="/TotemAdvertising" element={<TotemAdvertising />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

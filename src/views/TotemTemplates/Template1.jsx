@@ -8,8 +8,14 @@ import { useEffect, useState, useCallback } from "react";
 import { useSelector } from "react-redux";
 import connectionString from "../../components/connections/connection";
 import useSpeechRecognition from "../../components/hooks/useSpeechRecognition";
+import { getPdfFiles } from "../ChatPDF/PDFByTotem";
+import { sendMessageToChatPDF } from "../ChatPDF/SendMessageToChatPDF"
+import axios from "axios";
 
 export function Template1() {
+
+  const chatPDFApiKey = "sec_6Iv3eMYHKFN3Qkdwa6rF70GRcAaRgoK6"
+
   const navigate = useNavigate();
   const location = useLocation();
   const [time, SetTime] = useState(50);
@@ -17,6 +23,16 @@ export function Template1() {
   const [data, setData] = useState(null);
   const [imagesFinal, setImages] = useState(null);
   const totem = useSelector((state) => state.totem);
+
+  const [loading, setLoading] = useState(true)
+
+  const {
+    text,
+    startListening,
+    stopListening,
+    hasRecognitionSupport,
+    isListening
+  } = useSpeechRecognition(handleSubmit);
 
   const date = new Date();
   const year = date.getFullYear();
@@ -31,19 +47,22 @@ export function Template1() {
 
   const currentTime = formattedHours + ":" + formattedMinutes;
 
-  let images;
-  let id = totem.idTotem, keysb = null;
+  let images
+  let sourceID = null
+  let id = totem.idTotem
+  let keysb = null
+  let isTotemAvailable = true
   const searchParams = new URLSearchParams(window.location.search)
 
   keysb = searchParams.get('keys') == null ? null : searchParams.get('keys').toString();
 
-  const {
-    text,
-    startListening,
-    stopListening,
-    hasRecognitionSupport,
-    isListening
-  } = useSpeechRecognition(handleSubmit);
+  useEffect(() => {
+    const fetchAndUploadFiles = async () => {
+      sourceID = await getPdfFiles(id, chatPDFApiKey)
+      setLoading(false)
+    };
+    fetchAndUploadFiles()
+  }, [])
 
   function handleSubmit(textToSearch) {
     SetTime(3000);
@@ -60,7 +79,11 @@ export function Template1() {
     // Eliminar símbolos de las palabras en filteredKeys
     filteredKeys = filteredKeys.map(item => item.replace(new RegExp(`[${signs.join('')}]`, 'g'), ''));
     //navigate('/Template?keys=' + filteredKeys.toString());
-    navigate(`/ChatTotem/${totem.idTotem}?keys=${filteredKeys.toString()}`)
+    const sendMessage = async () => {
+      let responseFromChatPdf = await sendMessageToChatPDF(chatPDFApiKey, sourceID, filteredKeys.toString())
+      readResponse(responseFromChatPdf)
+    }
+    sendMessage()
   }
 
   const handleEnterPress = (event) => {
@@ -69,14 +92,15 @@ export function Template1() {
     } else {
       startListening();
     }
-    setIsListening(!isListening);
   };
 
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Enter') {
-        window.speechSynthesis.cancel();
-        handleEnterPress();
+        if (isTotemAvailable) {
+          window.speechSynthesis.cancel();
+          handleEnterPress();
+        }
       }
     };
 
@@ -101,15 +125,12 @@ export function Template1() {
       fetch(connectionString + '/TotemLocacion?id=' + id + '&keys=' + keysb).then(response => response.json())
         .then(result => {
           if (isMounted) {
-            console.log(result);
             setData(result);
             images = result.urlCarruselImagenes.split('|');
             let imagesF = images.map(image => Object.assign({ image }))
             setImages(imagesF);
-            console.log(imagesFinal);
           }
         })
-
     }
     return () => {
       isMounted = false;
@@ -121,8 +142,33 @@ export function Template1() {
     speakDescription(); // Llama a la función de síntesis de voz después de cada renderización si los datos cambian
   }, [location, speakDescription]);
 
+  const readResponse = (content) => {
+    const valueSpeech = new SpeechSynthesisUtterance(content);
+    valueSpeech.onstart = () => updateStatusTotem(true)
+    valueSpeech.onend = () => updateStatusTotem(false)
+    window.speechSynthesis.speak(valueSpeech);
+  }
+
+  const updateStatusTotem = async (available) => {
+    if (available) {
+      await axios.put(`${connectionString}/Totems/${id}/ModifyStatus`,
+        JSON.stringify(1),
+        { headers: { 'Content-Type': 'application/json' } })
+      isTotemAvailable = false
+    } else {
+      await axios.put(`${connectionString}/Totems/${id}/ModifyStatus`,
+        JSON.stringify(0),
+        { headers: { 'Content-Type': 'application/json' } })
+      isTotemAvailable = true
+    }
+  }
+
   if (!data && keysb != null) {
     return <div>Loading....</div>;
+  }
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Cargando...</div>;
   }
 
   return (

@@ -1,12 +1,5 @@
 import React from "react";
-import {
-  Card,
-  CardBody,
-  CardHeader,
-  Typography,
-  IconButton,
-  Avatar,
-} from "@material-tailwind/react";
+import { Card, CardBody, CardHeader, Typography, IconButton, Avatar, } from "@material-tailwind/react";
 import { CalendarIcon } from "@heroicons/react/24/outline";
 import { ClockIcon } from "@heroicons/react/24/outline";
 import { LightBulbIcon } from "@heroicons/react/24/outline";
@@ -18,8 +11,14 @@ import { useEffect, useState, useCallback } from "react";
 import { useSelector } from "react-redux";
 import connectionString from "../../components/connections/connection";
 import useSpeechRecognition from "../../components/hooks/useSpeechRecognition";
+import { getPdfFiles } from "../ChatPDF/PDFByTotem";
+import axios from "axios";
+import { sendMessageToChatPDF } from "../ChatPDF/SendMessageToChatPDF";
 
 export function Template2() {
+
+  const chatPDFApiKey = "sec_6Iv3eMYHKFN3Qkdwa6rF70GRcAaRgoK6"
+
   const navigate = useNavigate();
   const location = useLocation();
   const [time, SetTime] = useState(3000);
@@ -27,6 +26,16 @@ export function Template2() {
   const [data, setData] = useState(null);
   const [imagesFinal, setImages] = useState(null);
   const totem = useSelector((state) => state.totem);
+
+  const [loading, setLoading] = useState(true)
+
+  const {
+    text,
+    startListening,
+    stopListening,
+    hasRecognitionSupport,
+    isListening
+  } = useSpeechRecognition(handleSubmit);
 
   const date = new Date();
   const year = date.getFullYear();
@@ -42,23 +51,22 @@ export function Template2() {
 
   const currentTime = formattedHours + ":" + formattedMinutes;
 
-  let images;
-  let id = totem.idTotem,
-    keysb = null;
-  const searchParams = new URLSearchParams(window.location.search);
+  let images
+  let sourceID = null
+  let id = totem.idTotem
+  let keysb = null
+  let isTotemAvailable = true
+  const searchParams = new URLSearchParams(window.location.search)
 
-  keysb =
-    searchParams.get("keys") == null
-      ? null
-      : searchParams.get("keys").toString();
+  keysb = searchParams.get("keys") == null ? null : searchParams.get("keys").toString();
 
-  const {
-    text,
-    startListening,
-    stopListening,
-    hasRecognitionSupport,
-    isListening
-  } = useSpeechRecognition(handleSubmit);
+  useEffect(() => {
+    const fetchAndUploadFiles = async () => {
+      sourceID = await getPdfFiles(id, chatPDFApiKey)
+      setLoading(false)
+    }
+    fetchAndUploadFiles()
+  }, [])
 
   function handleSubmit(textToSearch) {
     SetTime(3000);
@@ -73,9 +81,13 @@ export function Template2() {
     let filteredKeys = keys.filter(item => !reject.includes(item));
 
     // Eliminar símbolos de las palabras en filteredKeys
-    filteredKeys = filteredKeys.map(item => item.replace(new RegExp(`[${signs.join('')}]`, 'g'), ''));
-
-    navigate('/Template?keys=' + filteredKeys.toString());
+    filteredKeys = filteredKeys.map(item => item.replace(new RegExp(`[${signs.join('')}]`, 'g'), ''))
+    //navigate('/Template?keys=' + filteredKeys.toString());
+    const sendMessage = async () => {
+      let responseFromChatPdf = await sendMessageToChatPDF(chatPDFApiKey, sourceID, filteredKeys.toString())
+      readResponse(responseFromChatPdf)
+    }
+    sendMessage()
   }
 
   const handleEnterPress = (event) => {
@@ -84,14 +96,15 @@ export function Template2() {
     } else {
       startListening();
     }
-    setIsListening(!isListening);
   };
 
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.key === 'Enter') {
-        window.speechSynthesis.cancel();
-        handleEnterPress();
+        if (isTotemAvailable) {
+          window.speechSynthesis.cancel();
+          handleEnterPress();
+        }
       }
     };
 
@@ -101,6 +114,7 @@ export function Template2() {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
+
   const speakDescription = useCallback(() => {
     if (data && data.descripcion) {
       const valueSpeech = new SpeechSynthesisUtterance(data.descripcion);
@@ -112,21 +126,14 @@ export function Template2() {
     let isMounted = true;
     if (id != null && keysb != null) {
       keysb = keysb.toLowerCase();
-      fetch(
-        connectionString + "/TotemLocacion?id=" +
-        id +
-        "&keys=" +
-        keysb
-      )
+      fetch(connectionString + "/TotemLocacion?id=" + id * "&keys=" + keysb)
         .then((response) => response.json())
         .then((result) => {
           if (isMounted) {
-            console.log(result);
             setData(result);
             images = result.urlCarruselImagenes.split("|");
             let imagesF = images.map((image) => Object.assign({ image }));
             setImages(imagesF);
-            console.log(imagesFinal);
           }
         });
     }
@@ -139,8 +146,34 @@ export function Template2() {
   useEffect(() => {
     speakDescription(); // Llama a la función de síntesis de voz después de cada renderización si los datos cambian
   }, [location, speakDescription]);
+
+  const readResponse = (content) => {
+    const valueSpeech = new SpeechSynthesisUtterance(content);
+    valueSpeech.onstart = () => updateStatusTotem(true)
+    valueSpeech.onend = () => updateStatusTotem(false)
+    window.speechSynthesis.speak(valueSpeech);
+  }
+
+  const updateStatusTotem = async (available) => {
+    if (available) {
+      await axios.put(`${connectionString}/Totems/${id}/ModifyStatus`,
+        JSON.stringify(1),
+        { headers: { 'Content-Type': 'application/json' } })
+      isTotemAvailable = false
+    } else {
+      await axios.put(`${connectionString}/Totems/${id}/ModifyStatus`,
+        JSON.stringify(0),
+        { headers: { 'Content-Type': 'application/json' } })
+      isTotemAvailable = true
+    }
+  }
+
   if (!data && keysb != null) {
     return <div>Loading....</div>;
+  }
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen">Cargando...</div>;
   }
 
   return (
@@ -174,12 +207,12 @@ export function Template2() {
           <Typography variant="h5" className="mb-4 text-gray-400">
             Cochabamba, Bolivia
           </Typography>
-          <div class="mb-6">
+          <div className="mb-6">
             <label
               for="default-input"
-              class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+              className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
             ></label>
-            <input type="text" id="default-input" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+            <input type="text" id="default-input" className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
               placeholder="Buscar..."
               value={text}
               onChange={(event) => SetBrowse(event.target.value)} />
@@ -227,15 +260,6 @@ export function Template2() {
             </Typography>
           </CardBody>
         </Card>
-        <p className="mt-4">
-          <button
-            onClick={() => {
-              navigate(`/ChatTotem/${totem.idTotem}`)
-            }}
-            className="bg-blue-500 rounded px-4 py-2 text-white">
-            Preguntar al totem
-          </button>
-        </p>
       </section>
       <footer className="w-full h-10 bg-gray-900 p-8 inset-x-0 bottom-0">
         <div className="flex flex-row flex-wrap items-center justify-center gap-x-12 gap-y-6 text-center text-white md:justify-between">
