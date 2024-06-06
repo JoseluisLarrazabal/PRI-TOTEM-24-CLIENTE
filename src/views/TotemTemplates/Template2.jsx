@@ -14,6 +14,7 @@ import useSpeechRecognition from "../../components/hooks/useSpeechRecognition";
 import { getPdfFiles } from "../ChatPDF/PDFByTotem";
 import axios from "axios";
 import { sendMessageToChatPDF } from "../ChatPDF/SendMessageToChatPDF";
+import TotemWebCamera from "../../components/web_cam/TotemWebCamera";
 
 export function Template2() {
 
@@ -55,7 +56,7 @@ export function Template2() {
   let sourceID = null
   let id = totem.idTotem
   let keysb = null
-  let isTotemAvailable = true
+
   const searchParams = new URLSearchParams(window.location.search)
 
   keysb = searchParams.get("keys") == null ? null : searchParams.get("keys").toString();
@@ -90,7 +91,7 @@ export function Template2() {
     sendMessage()
   }
 
-  const handleEnterPress = (event) => {
+  const handleListener = () => {
     if (isListening) {
       stopListening();
     } else {
@@ -98,22 +99,18 @@ export function Template2() {
     }
   };
 
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (event.key === 'Enter') {
-        if (isTotemAvailable) {
-          window.speechSynthesis.cancel();
-          handleEnterPress();
+  const handleCameraAvailable = (isAvailable) => {
+    axios.get(`${connectionString}/Totems/${id}/GetStatusTotem`)
+      .then(res => {
+        console.log('Estado del totem ', res.data.estadoActual)
+        if (res.data.estadoActual === 0) {
+          if (isAvailable > 0) { //si es mayor a cero, detecto la mano
+            window.speechSynthesis.cancel();
+            handleListener()
+          }
         }
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
+      })
+  }
 
   const speakDescription = useCallback(() => {
     if (data && data.descripcion) {
@@ -126,7 +123,7 @@ export function Template2() {
     let isMounted = true;
     if (id != null && keysb != null) {
       keysb = keysb.toLowerCase();
-      fetch(connectionString + "/TotemLocacion?id=" + id * "&keys=" + keysb)
+      fetch(connectionString + "/TotemLocacion?id=" + id + "&keys=" + keysb)
         .then((response) => response.json())
         .then((result) => {
           if (isMounted) {
@@ -159,12 +156,10 @@ export function Template2() {
       await axios.put(`${connectionString}/Totems/${id}/ModifyStatus`,
         JSON.stringify(1),
         { headers: { 'Content-Type': 'application/json' } })
-      isTotemAvailable = false
     } else {
       await axios.put(`${connectionString}/Totems/${id}/ModifyStatus`,
         JSON.stringify(0),
         { headers: { 'Content-Type': 'application/json' } })
-      isTotemAvailable = true
     }
   }
 
@@ -204,6 +199,9 @@ export function Template2() {
           >
             {data == null ? "Bienvenido" : data["nombre"]}
           </Typography>
+
+          <TotemWebCamera cameraAvailable={handleCameraAvailable} />
+
           <Typography variant="h5" className="mb-4 text-gray-400">
             Cochabamba, Bolivia
           </Typography>
@@ -279,4 +277,4 @@ export function Template2() {
   );
 }
 
-export default Template2;
+export default Template2

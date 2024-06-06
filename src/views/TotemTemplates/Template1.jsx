@@ -11,6 +11,7 @@ import useSpeechRecognition from "../../components/hooks/useSpeechRecognition";
 import { getPdfFiles } from "../ChatPDF/PDFByTotem";
 import { sendMessageToChatPDF } from "../ChatPDF/SendMessageToChatPDF"
 import axios from "axios";
+import TotemWebCamera from "../../components/web_cam/TotemWebCamera";
 
 export function Template1() {
 
@@ -51,7 +52,6 @@ export function Template1() {
   let sourceID = null
   let id = totem.idTotem
   let keysb = null
-  let isTotemAvailable = true
   const searchParams = new URLSearchParams(window.location.search)
 
   keysb = searchParams.get('keys') == null ? null : searchParams.get('keys').toString();
@@ -86,7 +86,7 @@ export function Template1() {
     sendMessage()
   }
 
-  const handleEnterPress = (event) => {
+  const handleListener = () => {
     if (isListening) {
       stopListening();
     } else {
@@ -94,22 +94,18 @@ export function Template1() {
     }
   };
 
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (event.key === 'Enter') {
-        if (isTotemAvailable) {
-          window.speechSynthesis.cancel();
-          handleEnterPress();
+  const handleCameraAvailable = (isAvailable) => {
+    axios.get(`${connectionString}/Totems/${id}/GetStatusTotem`)
+      .then(res => {
+        console.log('Estado del totem ', res.data.estadoActual)
+        if (res.data.estadoActual === 0) {
+          if (isAvailable > 0) {
+            window.speechSynthesis.cancel();
+            handleListener()
+          }
         }
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
+      })
+  }
 
   const speakDescription = useCallback(() => {
     if (data && data.descripcion) {
@@ -154,12 +150,10 @@ export function Template1() {
       await axios.put(`${connectionString}/Totems/${id}/ModifyStatus`,
         JSON.stringify(1),
         { headers: { 'Content-Type': 'application/json' } })
-      isTotemAvailable = false
     } else {
       await axios.put(`${connectionString}/Totems/${id}/ModifyStatus`,
         JSON.stringify(0),
         { headers: { 'Content-Type': 'application/json' } })
-      isTotemAvailable = true
     }
   }
 
@@ -174,6 +168,7 @@ export function Template1() {
   return (
     <>
       <Timer time={3000} route={'/TotemAdvertising'} />
+      <TotemWebCamera cameraAvailable={handleCameraAvailable} />
       <section className="relative block h-[50vh] bg-gray-900">
         <div className="bg-profile-background absolute top-0 h-full w-full ">
           <figure className="relative h-full w-full">
