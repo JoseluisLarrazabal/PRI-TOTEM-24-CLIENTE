@@ -1,0 +1,153 @@
+:root {
+  --PrimaryColor: #087ddd;
+  --HoverColor: hsl(219, 65%, 56%);
+  --paleGreen: hsl(0, 0%, 100%);
+  --whiteColor: #151515;
+  --blackColor: hsl(0, 0%, 18%);
+  --textColor: hwb(0 85% 15%);
+  --bgColor: hsl(43, 4%, 96%);
+  --greyText: rgb(190, 190, 190);
+  --inputColor: hsl(330, 12%, 97%);
+  /* Font and Typography */
+  --biggestFontSize: 2.5rem;
+  --h1FontSize: 1.5rem;
+  --h2FontSize: 1.25rem;
+  --h3FontSize: 1rem;
+  --normalFontSize: 0.938rem;
+  --smallFontSize: 0.813rem;
+  --smallestFontSize: 0.75rem;
+}
+
+.mainContent {
+  width: 82%;
+  height: 100%;
+  padding: 2rem;
+  overflow: auto;
+}
+.mainContent .botton {
+  margin-top: 2rem;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.sideBar {
+  background: var(--whiteColor);
+  box-shadow: 1px 0px 4px var(--greyText);
+  width: 18%;
+  height: 100%;
+  gap: 3rem;
+  overflow: auto;
+}
+.sideBar .logoDiv {
+  padding: 0.5rem 2rem 0;
+  cursor: pointer;
+}
+.sideBar .logoDiv img {
+  max-width: 30px;
+  margin-right: 0.5rem;
+  background: var(--inputColor);
+  border-radius: 2px;
+  padding: 0.2rem;
+}
+.sideBar .logoDiv h2 {
+  font-size: var(--h2FontSize);
+  color: var(--PrimaryColor);
+}
+.sideBar .menuDiv .divTitle, .sideBar .settingDiv .divTitle {
+  font-size: var(--h3FontSize);
+  color: var(--PrimaryColor);
+  padding: 0 1.5rem 1.5em;
+}
+.sideBar .menuDiv .menuList .listItem, .sideBar .settingDiv .menuList .listItem {
+  padding: 0.2rem 1.5rem;
+  width: 100%;
+  position: relative;
+}
+.sideBar .menuDiv .menuList .listItem::before, .sideBar .settingDiv .menuList .listItem::before {
+  position: absolute;
+  content: "";
+  height: 0%;
+  left: 0;
+  width: 5px;
+  bottom: 0;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+  background: var(--PrimaryColor);
+}
+.sideBar .menuDiv .menuList .listItem .menuLink, .sideBar .settingDiv .menuList .listItem .menuLink {
+  color: var(--greyText);
+  font-weight: 500;
+  transition: 0;
+}
+.sideBar .menuDiv .menuList .listItem .menuLink .icon, .sideBar .settingDiv .menuList .listItem .menuLink .icon {
+  margin-right: 0.5rem;
+}
+.sideBar .menuDiv .menuList .listItem:hover .menuLink, .sideBar .settingDiv .menuList .listItem:hover .menuLink {
+  color: var(--PrimaryColor);
+  transition: 0;
+}
+.sideBar .menuDiv .menuList .listItem:hover::before, .sideBar .settingDiv .menuList .listItem:hover::before {
+  height: 100%;
+  transition: 0.3s ease;
+}
+.sideBar .sideBardCard {
+  width: 100%;
+  padding: 1rem;
+  text-align: center;
+  position: relative;
+}
+.sideBar .sideBardCard .icon {
+  position: absolute;
+  background: var(--HoverColor);
+  border: 10px solid var(--greyText);
+  font-size: 3rem;
+  border-radius: 50%;
+  top: -8px;
+  right: 50%;
+  transform: translate(50%);
+  z-index: 100;
+}
+.sideBar .sideBardCard .cardContent {
+  position: relative;
+  padding: 1rem;
+  background: var(--PrimaryColor);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.sideBar .sideBardCard .cardContent h3 {
+  font-size: var(--h3FontSize);
+  margin-top: 1rem;
+  padding: 1rem 0;
+  font-weight: 800;
+  color: var(--blackColor);
+}
+.sideBar .sideBardCard .cardContent p {
+  font-size: var(--normalFontSize);
+  color: var(--textColor);
+  padding-bottom: 1rem;
+  font-weight: 500;
+}
+.sideBar .sideBardCard .cardContent .btn {
+  position: relative;
+  color: var(--textColor);
+  z-index: 1000;
+}
+.sideBar .sideBardCard .cardContent .circle1, .sideBar .sideBardCard .cardContent .circle2 {
+  position: absolute;
+  background: var(--paleGreen);
+  border-radius: 50%;
+  opacity: 0.7;
+}
+.sideBar .sideBardCard .cardContent .circle1 {
+  height: 100px;
+  width: 100px;
+  top: -50px;
+  left: -50px;
+}
+.sideBar .sideBardCard .cardContent .circle2 {
+  height: 150px;
+  width: 150px;
+  bottom: -80px;
+  right: -70px;
+  z-index: 1;
+}/*# sourceMappingURL=sidebar.css.map */
