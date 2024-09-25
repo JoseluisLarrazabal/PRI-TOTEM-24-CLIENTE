@@ -1,0 +1,97 @@
+/*estilo botones */
+.addButton{
+  margin: 30px;
+  width: 150px;
+  height: 60px;
+  border-radius: 20px;
+  border: none;
+  font-family: Arial;
+  font-weight: bold;
+  color: #181c29;
+  text-align: center;
+  background-color: rgb(54, 230, 0);
+}
+
+.deleteButton {
+  display: block;
+  position: absolute;
+  z-index: 2;
+  color: #d9d9d9;
+  font-size: 20px;
+  font-family: Arial;
+  font-weight: 700;
+  border: none;
+  margin-top: -40px;
+  margin-left: 85%;
+  margin-bottom: 10%;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  text-align: center;
+  background-color: rgb(121, 32, 32);
+}
+/*estilo cards */
+.background {
+  background-color: #181c29;
+  border-radius: 20px;
+  width: 100%;
+  height: 100%;
+}
+.card {
+  margin-left: 90px;
+  margin-right: auto;
+  position: relative;
+  margin-bottom: 90px;
+  display: block;
+}
+.cardDisplay{
+    display: flex;
+    flex-wrap: wrap;
+    margin: 30px;
+}
+
+.expDate {
+  background-color: #a3a2a2;
+  margin: 0 auto;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  width: 250px;
+  border-top-right-radius: 30px;
+  border-top-left-radius: 30px;
+}
+
+.expText {
+  font-family: Arial;
+  color: #181c29;
+  font-size: 18px;
+  font-weight: bold;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/*estilo imagenes */
+
+.imagePart {
+  margin: 0 auto;
+  background-color: #d9d9d9;
+
+  position: relative;
+  height: 500px;
+  width: 300px;
+  border-top-right-radius: 30px;
+  border-top-left-radius: 30px;
+  border-bottom-right-radius: 30px;
+  border-bottom-left-radius: 30px;
+}
+.imgAdd {
+  height: 450px;
+  width: 270px;
+  position: absolute;
+  background-color: #181c29;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 30px;
+}
