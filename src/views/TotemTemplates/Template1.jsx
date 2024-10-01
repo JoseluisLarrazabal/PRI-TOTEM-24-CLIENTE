@@ -203,15 +203,22 @@ export function Template1() {
                     Cochabamba, Bolivia
                   </Typography>
                 </div>
-                <div className="mb-6">
-                  <label htmlFor="default-input" className="block mb-2 text-sm font-medium text-gray-900">
-                    Presiona el micrófono y di a dónde te gustaría ir...
-                  </label>
-                  <button onClick={handleListener} className="bg-green-500 text-white font-bold py-2 px-4 rounded">
-                    {isListening ? 'Escuchando...' : 'Iniciar'}
-                  </button>
-                  {browse && <div>{browse}</div>}
-                </div>
+                <div class="bg-white p-6 d-flex justify-content-start align-items-start rounded shadow-lg border: 4px dashed #28a745; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1)">
+                    
+                    <div className="text-red-600 font-bold">
+                      <p className="leading-none text-lg">Ubicaciones</p>
+                      <p className="leading-none text-lg">Disponibles</p>
+                    </div>
+                    <div className="text-black grid grid-cols-2 gap-x-16 gap-y-4 text-lg">
+                      <p>Biblioteca</p>
+                      <p>Impresora</p>
+                      <p>Coliseo</p>
+                      <p>Bloque Tecnología</p>
+                      <p>Comedor</p>
+                      <p>Bienestar Estudiantil</p>
+                    </div>
+                  </div>
+                
 
                 <div className="w-full h-96 mt-8">
                   <MapContainer center={[-17.3936, -66.1571]} zoom={13} style={{ height: "100%", width: "100%" }}>
@@ -223,6 +230,15 @@ export function Template1() {
                       <Popup>Tu destino: Biblioteca</Popup>
                     </Marker>
                   </MapContainer>
+                </div>
+                <div className="mb-6">
+                  <label htmlFor="default-input" className="block mb-2 text-sm font-medium text-gray-900">
+                    Presiona el micrófono y di a dónde te gustaría ir...
+                  </label>
+                  <button onClick={handleListener} className="bg-green-500 text-white font-bold py-2 px-4 rounded">
+                    {isListening ? 'Escuchando...' : 'Iniciar'}
+                  </button>
+                  {browse && <div>{browse}</div>}
                 </div>
               </div>
             </div>
