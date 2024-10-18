@@ -14,7 +14,7 @@ import axios from "axios";
 import TotemWebCamera from "../../components/web_cam/TotemWebCamera";
 
 // Importando Leaflet y el CSS
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from 'leaflet';
 
@@ -35,76 +35,86 @@ L.Marker.prototype.options.icon = DefaultIcon;
 
 export function Template1() {
   const chatPDFApiKey = "sec_6Iv3eMYHKFN3Qkdwa6rF70GRcAaRgoK6";
-
   const navigate = useNavigate();
   const location = useLocation();
   const [time, SetTime] = useState(50);
   const [browse, SetBrowse] = useState("");
   const [data, setData] = useState(null);
   const [imagesFinal, setImages] = useState(null);
+  const [highlightedNavItem, setHighlightedNavItem] = useState(""); // Para resaltar el navbar
+  const [destination, setDestination] = useState(null); // Para guardar la ubicación de destino
+  const [polylinePositions, setPolylinePositions] = useState([]); // Para almacenar las posiciones de la línea
   const totem = useSelector((state) => state.totem);
-
   const [loading, setLoading] = useState(true);
 
+  const initialLocation = [-17.33084963008385, -66.22597751828793]; // Ubicación inicial de la app
+
+  const keywords = ["Biblioteca", "Impresora", "Coliseo", "Comedor", "Bienestar", "Bloque Tecnología"];
+  
   const {
     text,
     startListening,
     stopListening,
-    hasRecognitionSupport,
     isListening
   } = useSpeechRecognition(handleSubmit);
 
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = ('0' + (date.getMonth() + 1)).slice(-2);
-  const day = ('0' + date.getDate()).slice(-2);
-  const formattedDate = `${day}/${month}/${year}`;
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-
-  const formattedHours = String(hours).padStart(2, "0");
-  const formattedMinutes = String(minutes).padStart(2, "0");
-
-  const currentTime = formattedHours + ":" + formattedMinutes;
-
-  let images;
-  let sourceID = null;
-  let id = totem.idTotem;
-  let keysb = null;
-  const searchParams = new URLSearchParams(window.location.search);
-
-  keysb = searchParams.get('keys') == null ? null : searchParams.get('keys').toString();
-
   useEffect(() => {
     const fetchAndUploadFiles = async () => {
-      sourceID = await getPdfFiles(id, chatPDFApiKey);
+      await getPdfFiles(totem.idTotem, chatPDFApiKey);
       setLoading(false);
     };
     fetchAndUploadFiles();
   }, []);
 
   function handleSubmit(textToSearch) {
-    SetTime(3000);
-    let keys = textToSearch.split(" ");
-    SetBrowse("");
-    setImages(null);
-    setData(null);
-    keysb = "";
-    images = null;
-    let reject = ["la", "las", "el", "los"];
-    let signs = ['?', '¿', '.', ','];
-    let filteredKeys = keys.filter(item => !reject.includes(item));
+    // Asegurarse de que cada palabra reconocida tenga la primera letra en mayúscula
+    let filteredKeys = textToSearch.split(" ").filter(item => keywords.includes(item));
 
-    // Eliminar símbolos de las palabras en filteredKeys
-    filteredKeys = filteredKeys.map(item => item.replace(new RegExp(`[${signs.join('')}]`, 'g'), ''));
-    //navigate('/Template?keys=' + filteredKeys.toString());
-    const sendMessage = async () => {
-      let responseFromChatPdf = await sendMessageToChatPDF(chatPDFApiKey, sourceID, filteredKeys.toString());
-      readResponse(responseFromChatPdf);
-    };
-    sendMessage();
+    if (filteredKeys.length > 0) {
+      const recognizedLocation = filteredKeys[0];
+
+      // Formatear el nombre correctamente antes de enviarlo
+      const formattedLocation = recognizedLocation.charAt(0).toUpperCase() + recognizedLocation.slice(1).toLowerCase();
+      console.log("Buscando ubicación:", formattedLocation); // Verificación del formato correcto
+
+      setHighlightedNavItem(formattedLocation); // Resalta la palabra reconocida
+      checkLocationInDatabase(formattedLocation); // Verifica si existe en la base de datos
+    }
+}
+
+
+const checkLocationInDatabase = async (recognizedLocation) => {
+  // Aseguramos que el nombre se formatea correctamente antes de buscar
+  const formattedLocation = recognizedLocation.charAt(0).toUpperCase() + recognizedLocation.slice(1).toLowerCase();
+
+  console.log("Buscando ubicación:", formattedLocation); // Log para verificar el formato del nombre
+
+  try {
+      const response = await axios.get(`${connectionString}/Ubicaciones/BuscarPorNombre`, {
+          params: { nombre: formattedLocation }
+      });
+
+      if (response.data) {
+          console.log("Ubicación encontrada:", response.data);
+
+          const latitud = response.data.latitud;
+          const longitud = response.data.longitud;
+
+          // Verificamos si las coordenadas son válidas
+          if (latitud && longitud) {
+              console.log("Latitud:", latitud, "Longitud:", longitud);
+              setDestination([latitud, longitud]);
+              setPolylinePositions([initialLocation, [latitud, longitud]]);
+          } else {
+              console.error("Latitud o Longitud no válidas:", latitud, longitud);
+          }
+      } else {
+          console.log("Ubicación no encontrada.");
+      }
+  } catch (error) {
+      console.error("Error al verificar la ubicación en la base de datos:", error);
   }
-
+};
   const handleListener = () => {
     if (isListening) {
       stopListening();
@@ -113,124 +123,65 @@ export function Template1() {
     }
   };
 
-  const speakDescription = useCallback(() => {
-    if (data && data.descripcion) {
-      const valueSpeech = new SpeechSynthesisUtterance(data.descripcion);
-      window.speechSynthesis.speak(valueSpeech);
-    }
-  }, [data]);
-
-  useEffect(() => {
-    let isMounted = true;
-    if (id != null && keysb != null) {
-      keysb = keysb.toLowerCase();
-      fetch(connectionString + '/TotemLocacion?id=' + id + '&keys=' + keysb)
-        .then(response => response.json())
-        .then(result => {
-          if (isMounted) {
-            setData(result);
-            images = result.urlCarruselImagenes.split('|');
-            let imagesF = images.map(image => Object.assign({ image }));
-            setImages(imagesF);
-          }
-        });
-    }
-    return () => {
-      isMounted = false;
-      window.speechSynthesis.cancel();
-    };
-  }, [location]);
-
-  useEffect(() => {
-    speakDescription();
-  }, [location, speakDescription]);
-
-  const readResponse = (content) => {
-    const valueSpeech = new SpeechSynthesisUtterance(content);
-    window.speechSynthesis.speak(valueSpeech);
-  };
-
-  if (!data && keysb != null) {
-    return <div>Loading....</div>;
-  }
-
-  if (loading) {
-    return <div className="flex items-center justify-center h-screen">Cargando...</div>;
-  }
-
   return (
     <>
       <Timer time={3000} route={'/TotemAdvertising'} />
       <TotemWebCamera />
       <section className="relative block h-[50vh] bg-gray-900">
-        <div className="bg-profile-background absolute top-0 h-full w-full ">
+        <div className="bg-profile-background absolute top-0 h-full w-full">
           <figure className="relative h-full w-full">
             <Carrusel className="carrusel" images={imagesFinal == null ? pics : imagesFinal} data={imagesFinal} />
-            <figcaption className="absolute left-5 top-5 flex w-1/8 justify-items-center rounded-xl bg-white/75 p-2 shadow-lg shadow-black/5 saturate-200">
-              <p className="text-gray-700">{currentTime}</p>
-            </figcaption>
-            <figcaption className="absolute right-5 top-5 flex w-1/8 justify-items-center rounded-xl bg-white/75 p-2 shadow-lg shadow-black/5 saturate-200">
-              <p className="text-gray-700">{formattedDate}</p>
-            </figcaption>
           </figure>
         </div>
       </section>
+
       <section className="relative translate-y-12 bg-blue-gray-50/50 px-4 py-16">
         <div className="container mx-auto">
           <div className="relative -mt-64 mb-6 flex w-full min-w-0 flex-col break-words rounded-3xl bg-white shadow-xl shadow-gray-500/5">
             <div className="px-6">
-              <div className="flex flex-wrap justify-center">
-                <div className="flex w-full justify-center px-4 lg:order-2 lg:w-3/12">
-                  <div className="relative">
-                    <div className="-mt-20 w-32">
-                      <Avatar
-                        src="/img/logo.png"
-                        alt="Profile picture"
-                        variant="circular"
-                        className="h-full w-full shadow-xl"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
               <div className="my-8 text-center">
-                <Typography variant="h2" color="blue-gray" className="mb-2">
-                  {data == null ? 'Bienvenidos' : data['nombre']}
-                </Typography>
+                <Typography variant="h2" color="blue-gray" className="mb-2">Bienvenidos</Typography>
+
                 <div className="flex items-center justify-center gap-2">
                   <MapPinIcon className="-mt-px h-4 w-4 text-blue-gray-700" />
-                  <Typography className="font-medium text-blue-gray-700">
-                    Cochabamba, Bolivia
-                  </Typography>
+                  <Typography className="font-medium text-blue-gray-700">Cochabamba, Bolivia</Typography>
                 </div>
-                <div class="bg-white p-6 d-flex justify-content-start align-items-start rounded shadow-lg border: 4px dashed #28a745; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1)">
-                    
-                    <div className="text-red-600 font-bold">
-                      <p className="leading-none text-lg">Ubicaciones</p>
-                      <p className="leading-none text-lg">Disponibles</p>
-                    </div>
-                    <div className="text-black grid grid-cols-2 gap-x-16 gap-y-4 text-lg">
-                      <p>Biblioteca</p>
-                      <p>Impresora</p>
-                      <p>Coliseo</p>
-                      <p>Bloque Tecnología</p>
-                      <p>Comedor</p>
-                      <p>Bienestar Estudiantil</p>
-                    </div>
-                  </div>
-                
+
+                {/* Navbar con opciones y resaltado dinámico */}
+                <div className="flex justify-center space-x-4 mt-4">
+                  {keywords.map((item) => (
+                    <button
+                      key={item}
+                      className={`px-4 py-2 font-medium ${highlightedNavItem === item ? 'bg-green-500 text-white' : ''}`}
+                    >
+                      {item}
+                    </button>
+                  ))}
+                </div>
 
                 <div className="w-full h-96 mt-8">
-                  <MapContainer center={[-17.3936, -66.1571]} zoom={13} style={{ height: "100%", width: "100%" }}>
+                  <MapContainer center={initialLocation} zoom={13} style={{ height: "100%", width: "100%" }}>
                     <TileLayer
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                       attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     />
-                    <Marker position={[-17.3936, -66.1571]}>
-                      <Popup>Tu destino: Biblioteca</Popup>
+                    {/* Pin Inicial */}
+                    <Marker position={initialLocation}>
+                      <Popup>Ubicación inicial de la aplicación</Popup>
                     </Marker>
+                    {/* Pin Destino, si existe */}
+                    {destination && (
+                      <Marker position={destination}>
+                        <Popup>Destino: {highlightedNavItem}</Popup>
+                      </Marker>
+                    )}
+                    {/* Trazado */}
+                    {polylinePositions.length > 0 && (
+                      <Polyline positions={polylinePositions} color="blue" />
+                    )}
                   </MapContainer>
                 </div>
+
                 <div className="mb-6">
                   <label htmlFor="default-input" className="block mb-2 text-sm font-medium text-gray-900">
                     Presiona el micrófono y di a dónde te gustaría ir...
