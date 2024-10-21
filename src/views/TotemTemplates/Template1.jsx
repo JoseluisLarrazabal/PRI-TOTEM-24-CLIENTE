@@ -4,19 +4,22 @@ import Carrusel from "./Carrusel";
 import { pics } from "./Data";
 import Timer from "../Timer/Timer";
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import connectionString from "../../components/connections/connection";
 import useSpeechRecognition from "../../components/hooks/useSpeechRecognition";
 import { getPdfFiles } from "../ChatPDF/PDFByTotem";
-import { sendMessageToChatPDF } from "../ChatPDF/SendMessageToChatPDF";
 import axios from "axios";
 import TotemWebCamera from "../../components/web_cam/TotemWebCamera";
 
 // Importando Leaflet y el CSS
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
+
 import L from 'leaflet';
+
+// Tu clave de API de Mapbox
+const MAPBOX_API_KEY = 'pk.eyJ1IjoiYm9qamkwMCIsImEiOiJjbTJpY3EzeHIwbmFhMmlvbjV2NTVuejlwIn0.zvtpq8yNQYuUdEBUkYSUvw';
 
 // Configurando el icono de Leaflet
 import markerIcon from 'leaflet/dist/images/marker-icon.png';
@@ -37,26 +40,20 @@ export function Template1() {
   const chatPDFApiKey = "sec_6Iv3eMYHKFN3Qkdwa6rF70GRcAaRgoK6";
   const navigate = useNavigate();
   const location = useLocation();
-  const [time, SetTime] = useState(50);
   const [browse, SetBrowse] = useState("");
-  const [data, setData] = useState(null);
   const [imagesFinal, setImages] = useState(null);
   const [highlightedNavItem, setHighlightedNavItem] = useState(""); // Para resaltar el navbar
   const [destination, setDestination] = useState(null); // Para guardar la ubicación de destino
-  const [polylinePositions, setPolylinePositions] = useState([]); // Para almacenar las posiciones de la línea
   const totem = useSelector((state) => state.totem);
   const [loading, setLoading] = useState(true);
+  const [routeCoords, setRouteCoords] = useState([]); // Coordenadas de la ruta
 
-  const initialLocation = [-17.33084963008385, -66.22597751828793]; // Ubicación inicial de la app
+  const initialLocation = [-17.332983, -66.226246]; // Ubicación inicial de la app
 
-  const keywords = ["Biblioteca", "Impresora", "Coliseo", "Comedor", "Bienestar", "Bloque Tecnología"];
-  
-  const {
-    text,
-    startListening,
-    stopListening,
-    isListening
-  } = useSpeechRecognition(handleSubmit);
+  const keywords = ["Biblioteca", "Impresora", "Coliseo", "Comedor", "Bienestar", "Tecnología", "Arquitectura"];
+
+
+  const { startListening, stopListening, isListening } = useSpeechRecognition(handleSubmit);
 
   useEffect(() => {
     const fetchAndUploadFiles = async () => {
@@ -64,57 +61,65 @@ export function Template1() {
       setLoading(false);
     };
     fetchAndUploadFiles();
-  }, []);
+  }, [totem.idTotem, chatPDFApiKey]);
 
   function handleSubmit(textToSearch) {
-    // Asegurarse de que cada palabra reconocida tenga la primera letra en mayúscula
     let filteredKeys = textToSearch.split(" ").filter(item => keywords.includes(item));
 
     if (filteredKeys.length > 0) {
       const recognizedLocation = filteredKeys[0];
-
-      // Formatear el nombre correctamente antes de enviarlo
       const formattedLocation = recognizedLocation.charAt(0).toUpperCase() + recognizedLocation.slice(1).toLowerCase();
-      console.log("Buscando ubicación:", formattedLocation); // Verificación del formato correcto
-
-      setHighlightedNavItem(formattedLocation); // Resalta la palabra reconocida
-      checkLocationInDatabase(formattedLocation); // Verifica si existe en la base de datos
+      console.log("Buscando ubicación:", formattedLocation);
+      setHighlightedNavItem(formattedLocation);
+      checkLocationInDatabase(formattedLocation);
     }
-}
+  }
 
+  const checkLocationInDatabase = async (recognizedLocation) => {
+    const formattedLocation = recognizedLocation.charAt(0).toUpperCase() + recognizedLocation.slice(1).toLowerCase();
 
-const checkLocationInDatabase = async (recognizedLocation) => {
-  // Aseguramos que el nombre se formatea correctamente antes de buscar
-  const formattedLocation = recognizedLocation.charAt(0).toUpperCase() + recognizedLocation.slice(1).toLowerCase();
-
-  console.log("Buscando ubicación:", formattedLocation); // Log para verificar el formato del nombre
-
-  try {
+    try {
       const response = await axios.get(`${connectionString}/Ubicaciones/BuscarPorNombre`, {
-          params: { nombre: formattedLocation }
+        params: { nombre: formattedLocation }
       });
 
       if (response.data) {
-          console.log("Ubicación encontrada:", response.data);
+        console.log("Ubicación encontrada:", response.data); // Aquí se muestra la ubicación encontrada
 
-          const latitud = response.data.latitud;
-          const longitud = response.data.longitud;
+        const latitud = response.data.latitud;
+        const longitud = response.data.longitud;
 
-          // Verificamos si las coordenadas son válidas
-          if (latitud && longitud) {
-              console.log("Latitud:", latitud, "Longitud:", longitud);
-              setDestination([latitud, longitud]);
-              setPolylinePositions([initialLocation, [latitud, longitud]]);
-          } else {
-              console.error("Latitud o Longitud no válidas:", latitud, longitud);
-          }
-      } else {
-          console.log("Ubicación no encontrada.");
+        if (latitud && longitud) {
+          setDestination([latitud, longitud]);
+          drawRoute([latitud, longitud]); // Llamar para dibujar la ruta detallada
+        }
       }
-  } catch (error) {
+    } catch (error) {
       console.error("Error al verificar la ubicación en la base de datos:", error);
-  }
-};
+    }
+  };
+
+
+  const drawRoute = async (destinationCoords) => {
+    try {
+      // Hacer la solicitud a la API de Mapbox para obtener la ruta, tambien aqui se define si es ruta para autos o para transeuntes
+      const response = await axios.get(`https://api.mapbox.com/directions/v5/mapbox/walking/${initialLocation[1]},${initialLocation[0]};${destinationCoords[1]},${destinationCoords[0]}`, {
+        params: {
+          access_token: MAPBOX_API_KEY,
+          geometries: 'geojson',
+        },
+      });
+
+
+      const route = response.data.routes[0].geometry.coordinates;
+      const coordinates = route.map(coord => [coord[1], coord[0]]); // Cambiar de [lng, lat] a [lat, lng]
+
+      setRouteCoords(coordinates); // Almacenar la ruta para dibujarla en el mapa
+    } catch (error) {
+      console.error("Error al obtener la ruta de Mapbox Directions API:", error);
+    }
+  };
+
   const handleListener = () => {
     if (isListening) {
       stopListening();
@@ -147,7 +152,6 @@ const checkLocationInDatabase = async (recognizedLocation) => {
                   <Typography className="font-medium text-blue-gray-700">Cochabamba, Bolivia</Typography>
                 </div>
 
-                {/* Navbar con opciones y resaltado dinámico */}
                 <div className="flex justify-center space-x-4 mt-4">
                   {keywords.map((item) => (
                     <button
@@ -162,22 +166,21 @@ const checkLocationInDatabase = async (recognizedLocation) => {
                 <div className="w-full h-96 mt-8">
                   <MapContainer center={initialLocation} zoom={13} style={{ height: "100%", width: "100%" }}>
                     <TileLayer
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
                     />
-                    {/* Pin Inicial */}
+
                     <Marker position={initialLocation}>
                       <Popup>Ubicación inicial de la aplicación</Popup>
                     </Marker>
-                    {/* Pin Destino, si existe */}
                     {destination && (
                       <Marker position={destination}>
                         <Popup>Destino: {highlightedNavItem}</Popup>
                       </Marker>
                     )}
-                    {/* Trazado */}
-                    {polylinePositions.length > 0 && (
-                      <Polyline positions={polylinePositions} color="blue" />
+                    {/* Dibujar la ruta si existe */}
+                    {routeCoords.length > 0 && (
+                      <Polyline positions={routeCoords} color="blue" />
                     )}
                   </MapContainer>
                 </div>
