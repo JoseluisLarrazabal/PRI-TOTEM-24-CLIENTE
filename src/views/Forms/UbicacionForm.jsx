@@ -1,100 +1,114 @@
 import React, { useState } from "react";
 import axios from "axios";
+import MapModal from "../../components/ui/MapModal"; // Ajusta la ruta según donde tengas MapModal
 import connectionString from "../../components/connections/connection";
 
-function UbicacionForm() {
+const UbicacionForm = () => {
   const [nombre, setNombre] = useState("");
   const [latitud, setLatitud] = useState("");
   const [longitud, setLongitud] = useState("");
   const [direccion, setDireccion] = useState("");
   const [activo, setActivo] = useState(true);
+  const [isMapOpen, setIsMapOpen] = useState(false); // Controla la visibilidad del modal
+
+  const handleOpenMap = () => {
+    setIsMapOpen(true);
+  };
+
+  const handleCloseMap = () => {
+    setIsMapOpen(false);
+  };
+
+  const handleLocationSelect = (lat, lng) => {
+    setLatitud(lat);
+    setLongitud(lng);
+    handleCloseMap(); // Cierra el modal una vez seleccionada la ubicación
+  };
+
+  // Función para limpiar los campos después de guardar
+  const clearForm = () => {
+    setNombre("");
+    setLatitud("");
+    setLongitud("");
+    setDireccion("");
+    setActivo(true);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     try {
-      const nuevaUbicacion = {
+      // Enviar datos a la base de datos
+      await axios.post(`${connectionString}/Ubicaciones`, {
         nombre,
-        latitud: parseFloat(latitud),
-        longitud: parseFloat(longitud),
+        latitud,
+        longitud,
         direccion,
         activo,
-      };
+    });
+    
 
-      await axios.post(`${connectionString}/Ubicaciones`, nuevaUbicacion);
-      alert("Ubicación agregada exitosamente");
-      // Limpiar el formulario después de enviar
-      setNombre("");
-      setLatitud("");
-      setLongitud("");
-      setDireccion("");
-      setActivo(true);
+      // Mostrar mensaje de éxito y limpiar el formulario
+      alert("Ubicación guardada exitosamente");
+      clearForm();
     } catch (error) {
-      console.error("Error al agregar la ubicación:", error);
-      alert("Hubo un error al agregar la ubicación");
+      console.error("Error al guardar la ubicación:", error);
+      alert("Error al guardar la ubicación");
     }
   };
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Agregar Nueva Ubicación</h2>
+    <div>
+      <h2>Agregar Nueva Ubicación</h2>
       <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block text-gray-700">Nombre</label>
-          <input
-            type="text"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            className="w-full px-3 py-2 border rounded"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Latitud</label>
-          <input
-            type="number"
-            value={latitud}
-            onChange={(e) => setLatitud(e.target.value)}
-            className="w-full px-3 py-2 border rounded"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Longitud</label>
-          <input
-            type="number"
-            value={longitud}
-            onChange={(e) => setLongitud(e.target.value)}
-            className="w-full px-3 py-2 border rounded"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Dirección</label>
-          <input
-            type="text"
-            value={direccion}
-            onChange={(e) => setDireccion(e.target.value)}
-            className="w-full px-3 py-2 border rounded"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-gray-700">Activo</label>
-          <input
-            type="checkbox"
-            checked={activo}
-            onChange={(e) => setActivo(e.target.checked)}
-          />
-        </div>
-        <button
-          type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Guardar Ubicación
-        </button>
+        <label>Nombre</label>
+        <input
+          type="text"
+          value={nombre}
+          onChange={(e) => setNombre(e.target.value)}
+        />
+
+        <label>Latitud</label>
+        <input
+          type="text"
+          value={latitud}
+          onClick={handleOpenMap} // Abre el modal al hacer clic
+          readOnly
+        />
+
+        <label>Longitud</label>
+        <input
+          type="text"
+          value={longitud}
+          onClick={handleOpenMap} // Abre el modal al hacer clic
+          readOnly
+        />
+
+        <label>Dirección</label>
+        <input
+          type="text"
+          value={direccion}
+          onChange={(e) => setDireccion(e.target.value)}
+        />
+
+        <label>Activo</label>
+        <input
+          type="checkbox"
+          checked={activo}
+          onChange={(e) => setActivo(e.target.checked)}
+        />
+
+        <button type="submit">Guardar Ubicación</button>
       </form>
+
+      {/* Modal de Mapa */}
+      <MapModal
+        isOpen={isMapOpen}
+        onClose={handleCloseMap}
+        onLocationSelect={handleLocationSelect}
+      />
     </div>
   );
-}
+};
 
 export default UbicacionForm;

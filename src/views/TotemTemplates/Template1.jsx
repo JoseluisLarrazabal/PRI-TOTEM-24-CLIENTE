@@ -47,11 +47,9 @@ export function Template1() {
   const totem = useSelector((state) => state.totem);
   const [loading, setLoading] = useState(true);
   const [routeCoords, setRouteCoords] = useState([]); // Coordenadas de la ruta
+  const [keywords, setKeywords] = useState([]); // Ubicaciones dinámicas del navbar
 
   const initialLocation = [-17.332983, -66.226246]; // Ubicación inicial de la app
-
-  const keywords = ["Biblioteca", "Impresora", "Coliseo", "Comedor", "Bienestar", "Tecnología", "Arquitectura"];
-
 
   const { startListening, stopListening, isListening } = useSpeechRecognition(handleSubmit);
 
@@ -61,6 +59,19 @@ export function Template1() {
       setLoading(false);
     };
     fetchAndUploadFiles();
+
+    // Nueva función para recuperar ubicaciones de la base de datos
+    const fetchLocations = async () => {
+      try {
+        const response = await axios.get(`${connectionString}/Ubicaciones`);
+        const locationNames = response.data.map((loc) => loc.nombre);
+        setKeywords(locationNames); // Actualiza keywords con las ubicaciones desde la base de datos
+      } catch (error) {
+        console.error("Error al recuperar ubicaciones:", error);
+      }
+    };
+
+    fetchLocations(); // Llama a la función para recuperar ubicaciones
   }, [totem.idTotem, chatPDFApiKey]);
 
   function handleSubmit(textToSearch) {
@@ -99,26 +110,25 @@ export function Template1() {
     }
   };
 
-
   const drawRoute = async (destinationCoords) => {
     try {
-      // Hacer la solicitud a la API de Mapbox para obtener la ruta, tambien aqui se define si es ruta para autos o para transeuntes
+      // Solicitud a la API de Mapbox para obtener la ruta para caminantes
       const response = await axios.get(`https://api.mapbox.com/directions/v5/mapbox/walking/${initialLocation[1]},${initialLocation[0]};${destinationCoords[1]},${destinationCoords[0]}`, {
         params: {
           access_token: MAPBOX_API_KEY,
           geometries: 'geojson',
         },
       });
-
-
+  
       const route = response.data.routes[0].geometry.coordinates;
       const coordinates = route.map(coord => [coord[1], coord[0]]); // Cambiar de [lng, lat] a [lat, lng]
-
+  
       setRouteCoords(coordinates); // Almacenar la ruta para dibujarla en el mapa
     } catch (error) {
       console.error("Error al obtener la ruta de Mapbox Directions API:", error);
     }
   };
+  
 
   const handleListener = () => {
     if (isListening) {
