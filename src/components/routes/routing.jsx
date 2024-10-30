@@ -23,6 +23,8 @@ import SuperAdminView from "../../views/SuperAdmin/SuperAdminView";
 import EditLocacion from "../../views/Forms/EditLocaciones";
 import TotemAdvertising from "../../views/Advertising/TotemAdvertising";
 import ArchivosTotem from "../../views/Forms/ArchivosTotem"
+import UbicacionForm from "../../views/Forms/UbicacionForm";
+
 
 const Routing = () => {
   const user = useSelector((state) => state.user);
@@ -36,6 +38,7 @@ const Routing = () => {
         <Route path="/Plantillas" element={<SeleccionPlantilla />} />
         <Route path="/Logos" element={<Logos />} />
         <Route path="/EditLocacion/:id" element={<EditLocacion />} />
+        <Route path="/AgregarUbicacion" element={<UbicacionForm />} />
         {/*<Route path="/AdminForm" element={<AdminForm />} />
           <Route path="/TotemForm" element={<TotemForm />} />*/}
         <Route path="/TotemNew" element={<TotemForm />} />
