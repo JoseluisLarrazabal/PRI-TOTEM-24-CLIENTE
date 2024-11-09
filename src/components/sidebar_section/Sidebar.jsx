@@ -15,6 +15,8 @@ function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
 }
 
+
+
 const Sidebar = () => {
   const totem = useSelector((state) => state.totem);
   const navigate = useNavigate();
@@ -26,6 +28,9 @@ const Sidebar = () => {
       icon: HiHome,
       path: `/TotemEdit/:${totem.idTotem}`,
     }, */
+
+    
+    
     {
       name: "Panel Totems",
       current: false,
@@ -38,6 +43,15 @@ const Sidebar = () => {
       icon: MdEditLocationAlt,
       path: `/ListaLocaciones/:${totem === null ? 0 : totem.idTotem}`,
     },
+
+    {
+      name: "Agregar Ubicación",
+      current: false,
+      icon: MdEditLocationAlt,
+      path: "/AgregarUbicacion",
+    },
+
+    
     {
       name: "Plantillas",
       current: false,

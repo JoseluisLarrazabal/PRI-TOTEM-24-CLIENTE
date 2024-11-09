@@ -1,18 +1,17 @@
-
-/*Font for the project*/
+/* Import Montserrat font */
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
 
-/* Global definitions */
-*{
+/* Global Reset */
+* {
   padding: 0;
-  box-sizing: border-box;
   margin: 0;
+  box-sizing: border-box;
   font-family: 'Montserrat', sans-serif;
   transition: .3s ease;
 }
 
 /* Color and Styles (Default) */
-:root{
+:root {
   --PrimaryColor: hsl(94, 59%, 35%);
   --HoverColor: #bdf094;
   --paleGreen: hsl(96, 75%, 89%);
@@ -22,8 +21,8 @@
   --bgColor: hsl(220, 10%, 94%);
   --greyText: rgb(190, 190, 190);
   --inputColor: hsl(330, 12%, 97%);
-
-  /* Font and Typography */
+  
+  /* Font Sizes */
   --biggestFontSize: 2.5rem;
   --h1FontSize: 1.5rem;
   --h2FontSize: 1.25rem;
@@ -33,87 +32,125 @@
   --smallestFontSize: .75rem;
 }
 
-/*Default Style */
-html{
-  font-size: 90%;
+/* Body to take full height and center content */
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: auto;
+  padding: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--bgColor);
+  overflow: hidden; /* Prevent scroll */
 }
 
-a{
-  text-decoration: none;
+/* Main container styling for totem display */
+.containerV {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bgColor);
+  overflow: hidden;
+  border-radius: 0;
+  box-shadow: none;
 }
 
-li{
-  list-style: none;
+/* Fullscreen map container styling */
+.map-container {
+  height: 60vh; /* Adjust as needed */
+  width: 90vw;
+  max-width: 100%;
+  margin-top: 2rem; /* Space below navbar */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.icon{
+/* Navbar styling */
+.navbar {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  padding: 1rem;
+  background-color: var(--whiteColor);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  position: absolute;
+  top: 0;
+}
+
+.navbar span {
+  font-size: var(--normalFontSize);
+  color: var(--textColor);
+  cursor: default;
+  transition: color 0.3s, background-color 0.3s;
+}
+
+.navbar span.highlighted {
+  background-color: var(--PrimaryColor);
+  color: var(--whiteColor);
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+}
+
+/* Adjustments for button and icons */
+.btn {
+  border: none;
+  outline: none;
+  cursor: pointer;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px var(--inputColor);
+  padding: 0.8rem 1rem;
+  color: var(--textColor);
   font-size: var(--h2FontSize);
 }
 
-/* El root de Luciana en formulario paso de root a div por motivos de integracion */
+.btn:hover {
+  background: var(--paleGreen);
+  color: var(--PrimaryColor);
+}
+
+/* Additional styling for other elements */
 .divMain {
   background-color: #282c34;
-  display:flex;
+  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   color: white;
 }
 
-img{
-  width: 100%;
-  height: auto;
-}
-
-.flex{
+.flex {
   display: flex;
   align-items: center;
 }
 
-.grid{
+.grid {
   display: grid;
   align-items: center;
   gap: 1.5rem;
 }
 
-.btn{
-  border: none;
-  outline: none;
-  cursor: pointer;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px var(--inputColor);
-  padding: .8rem 1rem;
-  color:  var(--textColor);
+.icon {
+  font-size: var(--h2FontSize);
 }
 
-.btn .icon{
-  margin-left: .5rem;
+/* General button hover */
+.btn .icon {
+  margin-left: 0.5rem;
 }
 
-btn:hover{
-  background: var(--paleGreen);
-  color: var(--PrimaryColor);
-}
-
-body{
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: auto;
-  padding: 1rem;
+img {
   width: 100%;
+  height: auto;
 }
 
-.containerV{
-  position: relative;
-  width: 95vw;
-  height: 95vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bgColor);
-  overflow: hidden;
-  border-radius: 1rem;
-  box-shadow: 2px 2px 8px var(--greyText);
+a {
+  text-decoration: none;
 }
 
+li {
+  list-style: none;
+}
