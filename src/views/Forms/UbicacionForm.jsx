@@ -1,64 +1,102 @@
 import React, { useState } from "react";
 import axios from "axios";
-import MapModal from "../../components/ui/MapModal"; // Ajusta la ruta según donde tengas MapModal
+import MapModal from "../../components/ui/MapModal";
+import Swal from "sweetalert2"; // Importar SweetAlert
 import connectionString from "../../components/connections/connection";
+import "./ubicacionForm.css";
 
-const UbicacionForm = () => {
+const UbicacionForm = ({ idTotem, onClose, onSuccess }) => {
   const [nombre, setNombre] = useState("");
   const [latitud, setLatitud] = useState("");
   const [longitud, setLongitud] = useState("");
   const [direccion, setDireccion] = useState("");
-  const [activo, setActivo] = useState(true);
-  const [isMapOpen, setIsMapOpen] = useState(false); // Controla la visibilidad del modal
+  const [isMapOpen, setIsMapOpen] = useState(false);
 
-  const handleOpenMap = () => {
-    setIsMapOpen(true);
-  };
+  const handleOpenMap = () => setIsMapOpen(true);
 
-  const handleCloseMap = () => {
-    setIsMapOpen(false);
-  };
+  const handleCloseMap = () => setIsMapOpen(false);
 
   const handleLocationSelect = (lat, lng) => {
     setLatitud(lat);
     setLongitud(lng);
-    handleCloseMap(); // Cierra el modal una vez seleccionada la ubicación
+    handleCloseMap();
   };
 
-  // Función para limpiar los campos después de guardar
   const clearForm = () => {
     setNombre("");
     setLatitud("");
     setLongitud("");
     setDireccion("");
-    setActivo(true);
+  };
+
+  // Validar que cada palabra comience con mayúscula y no tenga espacios extra
+  const validateInput = (input) => {
+    const trimmed = input.trim(); // Elimina espacios al inicio y al final
+    const isValid = /^[A-Z][a-z]*(\s[A-Z][a-z]*)*$/.test(trimmed); // Valida formato de palabras
+    return isValid;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    try {
-      // Enviar datos a la base de datos
-      await axios.post(`${connectionString}/Ubicaciones`, {
-        nombre,
-        latitud,
-        longitud,
-        direccion,
-        activo,
-    });
-    
+    if (!idTotem) {
+      Swal.fire("Error", "No se ha seleccionado un Tótem válido.", "error");
+      return;
+    }
 
-      // Mostrar mensaje de éxito y limpiar el formulario
-      alert("Ubicación guardada exitosamente");
+    // Validar los campos 'nombre' y 'dirección'
+    if (!validateInput(nombre)) {
+      Swal.fire(
+        "Error en Nombre",
+        "El campo 'Nombre' debe comenzar cada palabra con mayúscula y no contener espacios innecesarios.",
+        "error"
+      );
+      return;
+    }
+
+    if (!validateInput(direccion)) {
+      Swal.fire(
+        "Error en Dirección",
+        "El campo 'Dirección' debe comenzar cada palabra con mayúscula y no contener espacios innecesarios.",
+        "error"
+      );
+      return;
+    }
+
+    const ubicacionData = {
+      nombre: nombre.trim(),
+      latitud: latitud,
+      longitud: longitud,
+      direccion: direccion.trim(),
+      idTotem,
+    };
+
+    console.log("Datos enviados al backend:", ubicacionData);
+
+    try {
+      await axios.post(`${connectionString}/Ubicaciones`, ubicacionData);
+      Swal.fire("Éxito", "Ubicación guardada exitosamente.", "success");
       clearForm();
+      if (onSuccess) onSuccess();
     } catch (error) {
-      console.error("Error al guardar la ubicación:", error);
-      alert("Error al guardar la ubicación");
+      console.error(
+        "Error al guardar la ubicación:",
+        error.response?.data || error.message
+      );
+      Swal.fire(
+        "Error",
+        "Ocurrió un problema al guardar la ubicación. Por favor, inténtelo de nuevo.",
+        "error"
+      );
     }
   };
 
   return (
     <div>
+      <button className="close-button" onClick={onClose}>
+        Cerrar
+      </button>
+
       <h2>Agregar Nueva Ubicación</h2>
       <form onSubmit={handleSubmit}>
         <label>Nombre</label>
@@ -66,22 +104,26 @@ const UbicacionForm = () => {
           type="text"
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
+          placeholder="Ingrese el nombre de la ubicación"
+          required
         />
 
         <label>Latitud</label>
         <input
           type="text"
           value={latitud}
-          onClick={handleOpenMap} // Abre el modal al hacer clic
+          onClick={handleOpenMap}
           readOnly
+          placeholder="Seleccione en el mapa"
         />
 
         <label>Longitud</label>
         <input
           type="text"
           value={longitud}
-          onClick={handleOpenMap} // Abre el modal al hacer clic
+          onClick={handleOpenMap}
           readOnly
+          placeholder="Seleccione en el mapa"
         />
 
         <label>Dirección</label>
@@ -89,19 +131,13 @@ const UbicacionForm = () => {
           type="text"
           value={direccion}
           onChange={(e) => setDireccion(e.target.value)}
-        />
-
-        <label>Activo</label>
-        <input
-          type="checkbox"
-          checked={activo}
-          onChange={(e) => setActivo(e.target.checked)}
+          placeholder="Ingrese la dirección"
+          required
         />
 
         <button type="submit">Guardar Ubicación</button>
       </form>
 
-      {/* Modal de Mapa */}
       <MapModal
         isOpen={isMapOpen}
         onClose={handleCloseMap}

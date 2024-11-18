@@ -1,0 +1,122 @@
+/* Fondo oscuro del modal */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center; /* Centra verticalmente */
+    z-index: 1000;
+    overflow: hidden;
+}
+
+/* Contenido del modal */
+.modal-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 1000px; /* Tamaño máximo del modal */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    transform: scale(0.9);
+    opacity: 0;
+    animation: modal-show 0.4s ease-out forwards; /* Animación para mostrar el modal */
+}
+
+/* Título del modal */
+.modal-content h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    color: #333;
+    text-align: center;
+}
+
+/* Formulario dentro del modal */
+.modal-content form label {
+    display: block;
+    margin: 10px 0 5px;
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.modal-content form input,
+.modal-content form button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 0.9rem;
+}
+
+/* Botones en el modal */
+.modal-buttons {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.save-button {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.save-button:hover {
+    background-color: #45a049;
+}
+
+
+.close-button {
+    background: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 8px 12px; /* Ajustar tamaño del botón */
+    cursor: pointer;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    z-index: 2001; /* Más alto que el contenido del modal */
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    display: inline-block; /* Asegura tamaño compacto */
+    width: auto; /* Ajusta el ancho al contenido */
+    height: auto; /* Ajusta la altura al contenido */
+    text-align: center; /* Centra el texto */
+    line-height: normal; /* Evita alturas excesivas */
+}
+
+.close-button:hover {
+    background: #e60000; /* Cambiar color al pasar el cursor */
+    transform: scale(1.1); /* Ampliar ligeramente */
+}
+
+  
+  
+
+
+/* Animación fluida para abrir el modal */
+@keyframes modal-show {
+    0% {
+        transform: scale(0.9);
+        opacity: 0;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}

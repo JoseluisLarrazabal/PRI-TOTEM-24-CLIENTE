@@ -16,14 +16,13 @@ import { useLocalStorage } from "react-use";
 import UserUpdateForm from "../../views/Login/UserUpdateForm";
 import TotemEdit from "../../views/Forms/TotemEdit";
 import LocacionesTable from "../../views/Forms/ListaLocaciones";
-import Locacion from "../../views/Forms/Locacion";
 import { useSelector } from "react-redux";
 import DisplayTotem from "../../views/TotemTemplates/DisplayTotem";
 import SuperAdminView from "../../views/SuperAdmin/SuperAdminView";
 import EditLocacion from "../../views/Forms/EditLocaciones";
 import TotemAdvertising from "../../views/Advertising/TotemAdvertising";
 import ArchivosTotem from "../../views/Forms/ArchivosTotem"
-import UbicacionForm from "../../views/Forms/UbicacionForm";
+import Ubicaciones from "../../views/Forms/Ubicaciones";
 
 
 const Routing = () => {
@@ -38,7 +37,6 @@ const Routing = () => {
         <Route path="/Plantillas" element={<SeleccionPlantilla />} />
         <Route path="/Logos" element={<Logos />} />
         <Route path="/EditLocacion/:id" element={<EditLocacion />} />
-        <Route path="/AgregarUbicacion" element={<UbicacionForm />} />
         {/*<Route path="/AdminForm" element={<AdminForm />} />
           <Route path="/TotemForm" element={<TotemForm />} />*/}
         <Route path="/TotemNew" element={<TotemForm />} />
@@ -48,6 +46,8 @@ const Routing = () => {
         <Route path="/UserUpdateForm" element={<UserUpdateForm />} />
         <Route path="/UserUpdateForm" element={<UserUpdateForm />} />
         <Route path="/SuperAdminView" element={<SuperAdminView />} />
+        <Route path="/Ubicaciones" element={<Ubicaciones />} />
+
 
       </Route>
 

@@ -45,10 +45,10 @@ const Sidebar = () => {
     },
 
     {
-      name: "Agregar Ubicación",
+      name: "Ubicaciones",
       current: false,
       icon: MdEditLocationAlt,
-      path: "/AgregarUbicacion",
+      path: "/Ubicaciones", // Ruta directa a la página de Ubicaciones
     },
 
     
