@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import MapModal from "../../components/ui/MapModal";
+import Swal from "sweetalert2";
 import connectionString from "../../components/connections/connection";
 import "./ubicacionForm.css";
 
@@ -10,6 +11,7 @@ const UbicacionEditarForm = ({ idTotem, initialData, onClose, onSuccess }) => {
   const [longitud, setLongitud] = useState("");
   const [direccion, setDireccion] = useState("");
   const [isMapOpen, setIsMapOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false); // Estado para bloquear botón durante la operación
 
   // Prellenar los datos con initialData si existe
   useEffect(() => {
@@ -35,7 +37,7 @@ const UbicacionEditarForm = ({ idTotem, initialData, onClose, onSuccess }) => {
     e.preventDefault();
 
     if (!idTotem) {
-      alert("Error: No se ha seleccionado un Tótem válido.");
+      Swal.fire("Error", "No se ha seleccionado un tótem válido.", "error");
       return;
     }
 
@@ -50,20 +52,29 @@ const UbicacionEditarForm = ({ idTotem, initialData, onClose, onSuccess }) => {
     console.log("Datos enviados al backend para edición:", updatedData);
 
     try {
-      await axios.put(`${connectionString}/Ubicaciones/${initialData.id}`, updatedData);
-      alert("Cambios confirmados exitosamente");
-      if (onSuccess) onSuccess();
+      setIsSubmitting(true); // Bloquear el botón mientras se envían los datos
+      const response = await axios.put(
+        `${connectionString}/Ubicaciones/${initialData.id}`,
+        updatedData
+      );
+      if (response.status === 204) {
+        Swal.fire("Éxito", "Los cambios han sido guardados correctamente.", "success");
+        if (onSuccess) onSuccess();
+      } else {
+        Swal.fire("Error", "No se pudieron guardar los cambios.", "error");
+      }
     } catch (error) {
       console.error("Error al actualizar la ubicación:", error.response?.data || error.message);
-      alert("Error al confirmar los cambios");
+      Swal.fire("Error", "Ocurrió un problema al guardar los cambios.", "error");
     } finally {
+      setIsSubmitting(false); // Liberar el bloqueo del botón
       onClose();
     }
   };
 
   return (
     <div>
-      <button className="close-button" onClick={onClose}>
+      <button className="close-button" onClick={onClose} disabled={isSubmitting}>
         Cerrar
       </button>
 
@@ -76,6 +87,7 @@ const UbicacionEditarForm = ({ idTotem, initialData, onClose, onSuccess }) => {
           onChange={(e) => setNombre(e.target.value)}
           placeholder="Ingrese el nombre de la ubicación"
           required
+          disabled={isSubmitting} // Bloquear mientras se envían los datos
         />
 
         <label>Latitud</label>
@@ -85,6 +97,7 @@ const UbicacionEditarForm = ({ idTotem, initialData, onClose, onSuccess }) => {
           onClick={handleOpenMap}
           readOnly
           placeholder="Seleccione en el mapa"
+          disabled={isSubmitting} // Bloquear mientras se envían los datos
         />
 
         <label>Longitud</label>
@@ -94,6 +107,7 @@ const UbicacionEditarForm = ({ idTotem, initialData, onClose, onSuccess }) => {
           onClick={handleOpenMap}
           readOnly
           placeholder="Seleccione en el mapa"
+          disabled={isSubmitting} // Bloquear mientras se envían los datos
         />
 
         <label>Dirección</label>
@@ -102,9 +116,12 @@ const UbicacionEditarForm = ({ idTotem, initialData, onClose, onSuccess }) => {
           value={direccion}
           onChange={(e) => setDireccion(e.target.value)}
           placeholder="Ingrese la dirección"
+          disabled={isSubmitting} // Bloquear mientras se envían los datos
         />
 
-        <button type="submit">Confirmar Cambios</button>
+        <button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Guardando..." : "Confirmar Cambios"}
+        </button>
       </form>
 
       <MapModal

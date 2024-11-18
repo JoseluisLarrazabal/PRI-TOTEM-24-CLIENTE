@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import axios from "axios";
 import MapModal from "../../components/ui/MapModal";
+import Swal from "sweetalert2"; // Importar SweetAlert
 import connectionString from "../../components/connections/connection";
 import "./ubicacionForm.css";
 
@@ -28,19 +29,45 @@ const UbicacionForm = ({ idTotem, onClose, onSuccess }) => {
     setDireccion("");
   };
 
+  // Validar que cada palabra comience con mayúscula y no tenga espacios extra
+  const validateInput = (input) => {
+    const trimmed = input.trim(); // Elimina espacios al inicio y al final
+    const isValid = /^[A-Z][a-z]*(\s[A-Z][a-z]*)*$/.test(trimmed); // Valida formato de palabras
+    return isValid;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!idTotem) {
-      alert("Error: No se ha seleccionado un Tótem válido.");
+      Swal.fire("Error", "No se ha seleccionado un Tótem válido.", "error");
+      return;
+    }
+
+    // Validar los campos 'nombre' y 'dirección'
+    if (!validateInput(nombre)) {
+      Swal.fire(
+        "Error en Nombre",
+        "El campo 'Nombre' debe comenzar cada palabra con mayúscula y no contener espacios innecesarios.",
+        "error"
+      );
+      return;
+    }
+
+    if (!validateInput(direccion)) {
+      Swal.fire(
+        "Error en Dirección",
+        "El campo 'Dirección' debe comenzar cada palabra con mayúscula y no contener espacios innecesarios.",
+        "error"
+      );
       return;
     }
 
     const ubicacionData = {
-      nombre,
-      latitud,
-      longitud,
-      direccion,
+      nombre: nombre.trim(),
+      latitud: latitud,
+      longitud: longitud,
+      direccion: direccion.trim(),
       idTotem,
     };
 
@@ -48,12 +75,19 @@ const UbicacionForm = ({ idTotem, onClose, onSuccess }) => {
 
     try {
       await axios.post(`${connectionString}/Ubicaciones`, ubicacionData);
-      alert("Ubicación guardada exitosamente");
+      Swal.fire("Éxito", "Ubicación guardada exitosamente.", "success");
       clearForm();
       if (onSuccess) onSuccess();
     } catch (error) {
-      console.error("Error al guardar la ubicación:", error.response?.data || error.message);
-      alert("Error al guardar la ubicación");
+      console.error(
+        "Error al guardar la ubicación:",
+        error.response?.data || error.message
+      );
+      Swal.fire(
+        "Error",
+        "Ocurrió un problema al guardar la ubicación. Por favor, inténtelo de nuevo.",
+        "error"
+      );
     }
   };
 
@@ -98,6 +132,7 @@ const UbicacionForm = ({ idTotem, onClose, onSuccess }) => {
           value={direccion}
           onChange={(e) => setDireccion(e.target.value)}
           placeholder="Ingrese la dirección"
+          required
         />
 
         <button type="submit">Guardar Ubicación</button>

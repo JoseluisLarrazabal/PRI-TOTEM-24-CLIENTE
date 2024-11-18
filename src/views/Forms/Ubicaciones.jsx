@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import Swal from "sweetalert2"; // Importar SweetAlert para mejores alertas
+import Swal from "sweetalert2"; // SweetAlert para alertas
 import "./ubicaciones.css";
 import UbicacionForm from "./UbicacionForm";
 import UbicacionEditarForm from "./UbicacionEditarForm";
@@ -13,46 +13,44 @@ const Ubicaciones = () => {
   const [isFormOpen, setIsFormOpen] = useState(false); // Modal para crear nueva ubicación
   const [isEditFormOpen, setIsEditFormOpen] = useState(false); // Modal para editar ubicación
   const [editData, setEditData] = useState(null); // Datos de la ubicación a editar
+  const [isLoading, setIsLoading] = useState(false); // Estado para controlar el bloqueo de botones
 
   // Recuperar la lista de tótems al cargar el componente
   useEffect(() => {
     const fetchTotems = async () => {
       try {
+        setIsLoading(true); // Bloquear mientras se cargan datos
         const response = await axios.get(`${connectionString}/Totems`);
         setTotems(response.data);
       } catch (error) {
+        Swal.fire("Error", "No se pudieron cargar los tótems.", "error");
         console.error("Error fetching totems:", error);
+      } finally {
+        setIsLoading(false); // Liberar bloqueo
       }
     };
     fetchTotems();
   }, []);
 
-  // Manejar el cambio del tótem seleccionado
   const handleTotemChange = async (e) => {
-    const totemId = e.target.value; // Recuperamos el ID del tótem seleccionado
+    const totemId = e.target.value;
     setSelectedTotem(totemId);
 
     try {
-      // Obtener las ubicaciones usando directamente el ID del tótem
-      const ubicacionesResponse = await axios.get(
-        `${connectionString}/Ubicaciones`,
-        { params: { totemId } } // Enviamos el ID como parámetro
-      );
-
-      setUbicaciones(ubicacionesResponse.data); // Actualizamos las ubicaciones en la tabla
+      setIsLoading(true); // Bloquear mientras se cargan ubicaciones
+      const response = await axios.get(`${connectionString}/Ubicaciones`, {
+        params: { totemId },
+      });
+      setUbicaciones(response.data);
     } catch (error) {
-      if (error.response) {
-        console.error(
-          `Error en la API (${error.response.status}): ${error.response.data}`
-        );
-      } else {
-        console.error("Error al recuperar las ubicaciones:", error.message);
-      }
-      setUbicaciones([]); // Limpiamos las ubicaciones si hay un error
+      Swal.fire("Error", "No se pudieron cargar las ubicaciones.", "error");
+      console.error("Error al recuperar las ubicaciones:", error.message);
+      setUbicaciones([]);
+    } finally {
+      setIsLoading(false); // Liberar bloqueo
     }
   };
 
-  // Manejar la eliminación de una ubicación
   const handleDelete = async (id) => {
     Swal.fire({
       title: "¿Estás seguro?",
@@ -65,28 +63,35 @@ const Ubicaciones = () => {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const response = await axios.delete(`${connectionString}/Ubicaciones/${id}`);
+          setIsLoading(true); // Bloquear botones durante la operación
+          const response = await axios.delete(
+            `${connectionString}/Ubicaciones/${id}`
+          );
           if (response.status === 204) {
-            // Eliminar la ubicación de la lista en el estado local
             setUbicaciones((prevUbicaciones) =>
               prevUbicaciones.filter((ubicacion) => ubicacion.id !== id)
             );
-            Swal.fire("¡Eliminado!", "La ubicación ha sido eliminada.", "success");
+            Swal.fire("Eliminado", "La ubicación ha sido eliminada.", "success");
           } else {
-            Swal.fire("Error", "No se pudo eliminar la ubicación.", "error");
+            Swal.fire(
+              "Error",
+              "El servidor devolvió un estado inesperado.",
+              "error"
+            );
           }
         } catch (error) {
+          Swal.fire("Error", "No se pudo eliminar la ubicación.", "error");
           console.error("Error al eliminar la ubicación:", error);
-          Swal.fire("Error", "Ocurrió un problema al eliminar la ubicación.", "error");
+        } finally {
+          setIsLoading(false); // Liberar bloqueo
         }
       }
     });
   };
 
-  // Abrir modal de edición
   const handleEdit = (ubicacion) => {
-    setEditData(ubicacion); // Guardar los datos de la ubicación seleccionada
-    setIsEditFormOpen(true); // Mostrar modal de edición
+    setEditData(ubicacion);
+    setIsEditFormOpen(true);
   };
 
   const toggleForm = () => {
@@ -98,7 +103,11 @@ const Ubicaciones = () => {
       <h1>Gestión de Ubicaciones</h1>
 
       <label htmlFor="totem-select">Seleccione un Tótem:</label>
-      <select id="totem-select" onChange={handleTotemChange}>
+      <select
+        id="totem-select"
+        onChange={handleTotemChange}
+        disabled={isLoading} // Bloquear durante carga
+      >
         <option value="">Seleccione un tótem</option>
         {totems.map((totem) => (
           <option key={totem.idTotem} value={totem.idTotem}>
@@ -129,17 +138,17 @@ const Ubicaciones = () => {
               <td>{ubicacion.direccion}</td>
               <td>{ubicacion.activo ? "Sí" : "No"}</td>
               <td>
-                {/* Botón para editar la ubicación */}
                 <button
                   className="action-button edit-button"
                   onClick={() => handleEdit(ubicacion)}
+                  disabled={isLoading} // Bloquear durante operación
                 >
                   Editar
                 </button>
-                {/* Botón para eliminar la ubicación */}
                 <button
                   className="action-button delete-button"
                   onClick={() => handleDelete(ubicacion.id)}
+                  disabled={isLoading} // Bloquear durante operación
                 >
                   Borrar
                 </button>
@@ -149,11 +158,14 @@ const Ubicaciones = () => {
         </tbody>
       </table>
 
-      <button className="add-button" onClick={toggleForm}>
+      <button
+        className="add-button"
+        onClick={toggleForm}
+        disabled={isLoading} // Bloquear durante operación
+      >
         Crear Nueva Ubicación
       </button>
 
-      {/* Modal para agregar nueva ubicación */}
       {isFormOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
@@ -170,7 +182,6 @@ const Ubicaciones = () => {
         </div>
       )}
 
-      {/* Modal para editar ubicación */}
       {isEditFormOpen && (
         <div className="modal-overlay">
           <div className="modal-content">
