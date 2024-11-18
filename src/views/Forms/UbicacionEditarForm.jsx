@@ -4,12 +4,22 @@ import MapModal from "../../components/ui/MapModal";
 import connectionString from "../../components/connections/connection";
 import "./ubicacionForm.css";
 
-const UbicacionForm = ({ idTotem, onClose, onSuccess }) => {
+const UbicacionEditarForm = ({ idTotem, initialData, onClose, onSuccess }) => {
   const [nombre, setNombre] = useState("");
   const [latitud, setLatitud] = useState("");
   const [longitud, setLongitud] = useState("");
   const [direccion, setDireccion] = useState("");
   const [isMapOpen, setIsMapOpen] = useState(false);
+
+  // Prellenar los datos con initialData si existe
+  useEffect(() => {
+    if (initialData) {
+      setNombre(initialData.nombre || "");
+      setLatitud(initialData.latitud || "");
+      setLongitud(initialData.longitud || "");
+      setDireccion(initialData.direccion || "");
+    }
+  }, [initialData]);
 
   const handleOpenMap = () => setIsMapOpen(true);
 
@@ -21,13 +31,6 @@ const UbicacionForm = ({ idTotem, onClose, onSuccess }) => {
     handleCloseMap();
   };
 
-  const clearForm = () => {
-    setNombre("");
-    setLatitud("");
-    setLongitud("");
-    setDireccion("");
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -36,7 +39,7 @@ const UbicacionForm = ({ idTotem, onClose, onSuccess }) => {
       return;
     }
 
-    const ubicacionData = {
+    const updatedData = {
       nombre,
       latitud,
       longitud,
@@ -44,16 +47,17 @@ const UbicacionForm = ({ idTotem, onClose, onSuccess }) => {
       idTotem,
     };
 
-    console.log("Datos enviados al backend:", ubicacionData);
+    console.log("Datos enviados al backend para edición:", updatedData);
 
     try {
-      await axios.post(`${connectionString}/Ubicaciones`, ubicacionData);
-      alert("Ubicación guardada exitosamente");
-      clearForm();
+      await axios.put(`${connectionString}/Ubicaciones/${initialData.id}`, updatedData);
+      alert("Cambios confirmados exitosamente");
       if (onSuccess) onSuccess();
     } catch (error) {
-      console.error("Error al guardar la ubicación:", error.response?.data || error.message);
-      alert("Error al guardar la ubicación");
+      console.error("Error al actualizar la ubicación:", error.response?.data || error.message);
+      alert("Error al confirmar los cambios");
+    } finally {
+      onClose();
     }
   };
 
@@ -63,7 +67,7 @@ const UbicacionForm = ({ idTotem, onClose, onSuccess }) => {
         Cerrar
       </button>
 
-      <h2>Agregar Nueva Ubicación</h2>
+      <h2>Editar Ubicación</h2>
       <form onSubmit={handleSubmit}>
         <label>Nombre</label>
         <input
@@ -100,7 +104,7 @@ const UbicacionForm = ({ idTotem, onClose, onSuccess }) => {
           placeholder="Ingrese la dirección"
         />
 
-        <button type="submit">Guardar Ubicación</button>
+        <button type="submit">Confirmar Cambios</button>
       </form>
 
       <MapModal
@@ -112,4 +116,4 @@ const UbicacionForm = ({ idTotem, onClose, onSuccess }) => {
   );
 };
 
-export default UbicacionForm;
+export default UbicacionEditarForm;

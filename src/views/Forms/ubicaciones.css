@@ -1,0 +1,162 @@
+.ubicaciones-container {
+    padding: 20px;
+  }
+  
+  .ubicaciones-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+  }
+  
+  .ubicaciones-table th,
+  .ubicaciones-table td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+  }
+  
+  .add-button {
+    margin-top: 20px;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 14px;
+  }
+  
+  .add-button:hover {
+    background-color: #0056b3;
+  }
+  
+  .ubicacion-form {
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 5px;
+    max-width: 400px;
+    margin: auto;
+  }
+  
+  .ubicacion-form form label {
+    display: block;
+    margin: 10px 0 5px;
+  }
+  
+  .ubicacion-form form input,
+  .ubicacion-form form button {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+  }
+  
+  /* General styles for action buttons */
+  .action-button {
+    padding: 5px 10px;
+    margin: 0 5px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    transition: background-color 0.3s ease;
+  }
+  
+  /* Specific styles for edit button */
+  .edit-button {
+    background-color: #4caf50; /* Green */
+  }
+  
+  .edit-button:hover {
+    background-color: #45a049;
+  }
+  
+  /* Specific styles for delete button */
+  .delete-button {
+    background-color: #f44336; /* Red */
+  }
+  
+  .delete-button:hover {
+    background-color: #d32f2f;
+  }
+  
+  /* Fondo oscuro del modal */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center; /* Centra horizontalmente */
+    align-items: center; /* Centra verticalmente */
+    z-index: 1000;
+  }
+  
+  /* Contenido del modal con animación fluida */
+  .modal-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%; /* Para pantallas pequeñas */
+    max-width: 400px; /* Máximo ancho */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+    transform: scale(0.9) translateY(-20px); /* Posición inicial */
+    opacity: 0; /* Transparente al inicio */
+    animation: modal-show 0.4s ease-out forwards; /* Animación para mostrarse */
+  }
+  
+  /* Botones dentro del modal */
+  .modal-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+  }
+  
+  .save-button {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .save-button:hover {
+    background-color: #45a049;
+  }
+  
+  .cancel-button {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: all 0.2s ease-in-out;
+  }
+  
+  .cancel-button:hover {
+    background-color: #d32f2f;
+  }
+  
+  /* Animación fluida para abrir el modal */
+  @keyframes modal-show {
+    0% {
+      transform: scale(0.9) translateY(-20px); /* Escala inicial más pequeña */
+      opacity: 0; /* Transparente al inicio */
+    }
+    100% {
+      transform: scale(1) translateY(0); /* Escala normal y centrado */
+      opacity: 1; /* Totalmente visible */
+    }
+  }
+  

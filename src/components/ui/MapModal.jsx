@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React from "react";
+import ReactDOM from "react-dom";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import markerIconPng from "leaflet/dist/images/marker-icon.png"; // Importar la imagen directamente
+import markerIconPng from "leaflet/dist/images/marker-icon.png";
 import "./MapModal.css";
 
-// Configurar el ícono predeterminado
 const markerIcon = new L.Icon({
   iconUrl: markerIconPng,
   iconSize: [25, 41],
@@ -14,7 +14,7 @@ const markerIcon = new L.Icon({
 });
 
 function LocationMarker({ onLocationSelect }) {
-  const [position, setPosition] = useState(null);
+  const [position, setPosition] = React.useState(null);
 
   useMapEvents({
     click(e) {
@@ -30,7 +30,7 @@ function LocationMarker({ onLocationSelect }) {
 const MapModal = ({ isOpen, onClose, onLocationSelect }) => {
   if (!isOpen) return null;
 
-  return (
+  return ReactDOM.createPortal(
     <div className="modal-overlay">
       <div className="modal-content">
         <button className="close-button" onClick={onClose}>
@@ -44,7 +44,8 @@ const MapModal = ({ isOpen, onClose, onLocationSelect }) => {
           <LocationMarker onLocationSelect={onLocationSelect} />
         </MapContainer>
       </div>
-    </div>
+    </div>,
+    document.body // Renderiza el modal sobre todo el DOM
   );
 };
 
