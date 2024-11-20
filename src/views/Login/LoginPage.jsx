@@ -117,9 +117,10 @@ export default function Login() {
           <div>
             <img
               className="mx-auto h-12 w-auto"
-              src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=600"
               alt="Your Company"
+              src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIGFyaWEtaGlkZGVuPSJ0cnVlIiByb2xlPSJpbWciIGNsYXNzPSJpY29uaWZ5IGljb25pZnktLS1sb2dvcyIgd2lkdGg9IjM1LjkzIiBoZWlnaHQ9IjMyIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJ4TWlkWU1pZCBtZWV0IiB2aWV3Qm94PSIwIDAgMjU2IDIyOCI+PHBhdGggZmlsbD0iI0UwRThGRCIgZD0iTTc2LjA4NiAxOS4xNDRjMTYuMjMzLTUuNzkgMzcuMTYxIDQuNjUgNDguMzg4IDE1LjIzNmwtMy40ODUgMS40NzljLTkuMDI0LTEwLjQyNS0yOC4zMzEtMTkuNjY3LTQwLjMyLTExLjI2NGwtNC42OTggMS41ODJ6TTkxLjA3NyAxNy44ODhjLTYuNzMzIDQuMzc1LTguNTc2IDE0LjE4LTQuNTQyIDIwLjc2MSAzLjQzNyA2LjU4NSAxMy40NDUgOC4xNjcgMTguMzI5IDIuNTY5IDUuMzg2LTUuNjA5IDQuNjc4LTE1LjI5OS0xLjY1MS0yMC4wMTRaTTI0LjU1IDEzMi4xMThjNi44OTYtNy45MzggMjEuNjU1IDMuNDU2IDI5LjE1NyAxMS4yNjRsNi4zNiA2LjI3OEM2MS44NzMgMTU5Ljk3NiA0NC42NDEgMTczLjUyMiAzNC4zMTMgMTY1LjY3MnptMTA3LjE2NyAzLjQ5OWMtNS4wNDEgMC4wMy0xMC4xOTggMC4zNzQtMTUuNDU4IDEuMDg0IDEuOTczIDMuNTUyIDMuODUgNi43NzIgNS41NCAxMC4wNTcgMy4yNiA1LjY3MyA2LjQyOCAxMC42MTkgOS41NyAxNS43MzVsMS41NjIgMi43NDZjLTAuNTg3IDEuNjgyLTEuMzYyIDMuMjc2LTIuMjQ4IDQuNzk3Yy0wLjczNSAxLjE5My0xLjU5NyAyLjM0NC0yLjU3NiAzLjQyNCAwLjM2MyAxLjM1OCAwLjkyNyAyLjY4NiAxLjYyNSAzLjkyMXoiPjwvcGF0aD48L3N2Zz4="
             />
+
             <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
               Inicia sesión en tu cuenta
             </h2>
