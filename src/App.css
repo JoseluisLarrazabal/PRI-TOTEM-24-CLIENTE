@@ -68,32 +68,40 @@ body {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Navbar styling */
+/* Cambios en el Navbar */
 .navbar {
   display: flex;
   justify-content: center;
   gap: 2rem;
   padding: 1rem;
   background-color: var(--whiteColor);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   width: 100%;
   position: absolute;
   top: 0;
 }
 
 .navbar span {
-  font-size: var(--normalFontSize);
-  color: var(--textColor);
-  cursor: default;
-  transition: color 0.3s, background-color 0.3s;
+  font-size: 1.2rem; /* Tamaño de letra más grande */
+  font-weight: 600; /* Letra más gruesa */
+  color: var(--PrimaryColor); /* Color principal */
+  cursor: pointer;
+  transition: color 0.3s ease, background-color 0.3s ease, transform 0.2s;
+}
+
+.navbar span:hover {
+  color: var(--HoverColor); /* Cambiar color al pasar el mouse */
+  transform: scale(1.1); /* Aumentar tamaño ligeramente */
 }
 
 .navbar span.highlighted {
   background-color: var(--PrimaryColor);
   color: var(--whiteColor);
   padding: 0.5rem 1rem;
-  border-radius: 5px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Agregar un poco de sombra */
 }
+
 
 /* Adjustments for button and icons */
 .btn {
