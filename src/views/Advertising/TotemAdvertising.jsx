@@ -4,13 +4,15 @@ import "react-responsive-carousel/lib/styles/carousel.min.css";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import connectionString from "../../components/connections/connection";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
+
 function TotemAdvertising() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [publicidades, setPublicidades] = useState([]);
   const totem = useSelector((state) => state.totem);
   const navigate = useNavigate();
 
+  // Cargar las publicidades relacionadas al tótem
   const loadPublicidades = () => {
     axios
       .get(connectionString + `/PublicidadT/${totem.idTotem}`)
@@ -26,6 +28,7 @@ function TotemAdvertising() {
     loadPublicidades();
   }, []);
 
+  // Manejar el cambio de imágenes en el carrusel
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveIndex((prevIndex) => (prevIndex + 1) % publicidades.length);
@@ -36,19 +39,19 @@ function TotemAdvertising() {
     };
   }, [publicidades.length]);
 
+  // Manejar eventos de clic para reactivar el tótem
   useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (event.key === 'Enter') {
-        navigate("/Template");
-      }
+    const handleClick = () => {
+      navigate("/Template"); // Redirigir al template principal
     };
 
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("click", handleClick);
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener("click", handleClick);
     };
-  }, []);
+  }, [navigate]);
+
   return (
     <div className="w-screen h-screen flex items-center justify-center">
       <Carousel
@@ -66,9 +69,9 @@ function TotemAdvertising() {
         {publicidades.map((publicidad, index) => (
           <div key={index}>
             <img
-              src={'data:image/png;base64,' + publicidad.urlPublicidad}
+              src={"data:image/png;base64," + publicidad.urlPublicidad}
               alt="Publicidad"
-              className="h-screen"
+              className="h-screen object-contain" // Evita la distorsión
             />
           </div>
         ))}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { Avatar, Typography } from "@material-tailwind/react";
 import { MapPinIcon } from "@heroicons/react/24/solid";
 import Carrusel from "./Carrusel";
@@ -9,7 +9,7 @@ import { useSelector } from "react-redux";
 import connectionString from "../../components/connections/connection";
 import useSpeechRecognition from "../../components/hooks/useSpeechRecognition";
 import axios from "axios";
-import TotemWebCamera from "../../components/web_cam/TotemWebCamera";
+import TotemAdvertising from "../Advertising/TotemAdvertising.jsx";
 
 // Importando Leaflet y el CSS
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
@@ -56,6 +56,8 @@ export function Template1() {
   const [destination, setDestination] = useState(null); // Para guardar la ubicación de destino
   const [routeCoords, setRouteCoords] = useState([]); // Coordenadas de la ruta
   const [awaitingConfirmation, setAwaitingConfirmation] = useState(false); // Controla la confirmación de ubicación
+  const [isInactive, setIsInactive] = useState(false); // Para manejar inactividad
+  const [timer, setTimer] = useState(null); // Temporizador de inactividad
 
   const initialLocation = [-17.332983, -66.226246]; // Ubicación inicial de la app
   const { startListening, stopListening, isListening } = useSpeechRecognition(handleSubmit);
@@ -182,6 +184,34 @@ export function Template1() {
     }
   };
 
+  // Detección de inactividad
+  const handleUserActivity = useCallback(() => {
+    setIsInactive(false); // Marca como activo
+    if (timer) clearTimeout(timer); // Resetea el temporizador
+    setTimer(setTimeout(() => setIsInactive(true), 60000)); // 1 minuto de inactividad
+  }, [timer]);
+
+  useEffect(() => {
+    // Configura los eventos para detectar actividad
+    window.addEventListener("mousemove", handleUserActivity);
+    window.addEventListener("keydown", handleUserActivity);
+    window.addEventListener("click", handleUserActivity);
+
+    return () => {
+      // Limpia los eventos al desmontar
+      window.removeEventListener("mousemove", handleUserActivity);
+      window.removeEventListener("keydown", handleUserActivity);
+      window.removeEventListener("click", handleUserActivity);
+    };
+  }, [handleUserActivity]);
+
+  // Redirige al carrusel de publicidad si está inactivo
+  useEffect(() => {
+    if (isInactive) {
+      navigate("/TotemAdvertising"); // Redirige al carrusel de publicidad
+    }
+  }, [isInactive, navigate]);
+
   return (
     <div className="relative h-screen w-screen">
       {/* Carrusel de fondo */}
@@ -189,7 +219,6 @@ export function Template1() {
 
       <div className="absolute inset-0 bg-opacity-50 z-10 flex flex-col items-center justify-center">
         <Timer time={3000} route={"/TotemAdvertising"} />
-        <TotemWebCamera />
 
         <Typography variant="h2" color="white" className="mb-4">
           Bienvenidos
