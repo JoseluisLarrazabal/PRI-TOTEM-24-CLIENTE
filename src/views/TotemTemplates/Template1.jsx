@@ -10,6 +10,8 @@ import connectionString from "../../components/connections/connection";
 import useSpeechRecognition from "../../components/hooks/useSpeechRecognition";
 import axios from "axios";
 import TotemAdvertising from "../Advertising/TotemAdvertising.jsx";
+import TotemWebCamera from "./../../components/web_cam/TotemWebCamera.jsx"; // Importamos el componente de gestos
+
 
 // Importando Leaflet y el CSS
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
@@ -19,7 +21,6 @@ import L from "leaflet";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
-// Tu clave de API de Mapbox
 const MAPBOX_API_KEY = "pk.eyJ1IjoiYm9qamkwMCIsImEiOiJjbTJpY3EzeHIwbmFhMmlvbjV2NTVuejlwIn0.zvtpq8yNQYuUdEBUkYSUvw";
 
 // Configurando el icono de Leaflet
@@ -58,6 +59,7 @@ export function Template1() {
   const [awaitingConfirmation, setAwaitingConfirmation] = useState(false); // Controla la confirmación de ubicación
   const [isInactive, setIsInactive] = useState(false); // Para manejar inactividad
   const [timer, setTimer] = useState(null); // Temporizador de inactividad
+  const [gestureDetected, setGestureDetected] = useState(false); // Estado para gestos detectados
 
   const initialLocation = [-17.332983, -66.226246]; // Ubicación inicial de la app
   const { startListening, stopListening, isListening } = useSpeechRecognition(handleSubmit);
@@ -84,6 +86,24 @@ export function Template1() {
 
     fetchLocations(); // Llama a la función para recuperar ubicaciones
   }, [totem]);
+
+  // Función para manejar la acción cuando se detecta un gesto
+  const handleGestureAction = (status) => {
+    if (status > 0 && !isListening) { // Solo activar si no está escuchando
+      setGestureDetected(true);
+      startListening(); // Activa el reconocimiento de voz al detectar un gesto
+    } else if (status === 0 && isListening) { // Detener si ya no hay gestos y está escuchando
+      setGestureDetected(false);
+      stopListening(); // Detiene el reconocimiento de voz si no hay gestos detectados
+    }
+  };
+  
+
+  useEffect(() => {
+    if (gestureDetected) {
+      console.log("Gesto detectado. Iniciando reconocimiento de voz...");
+    }
+  }, [gestureDetected]);
 
   // Función para usar ResponsiveVoice
   const speakMessage = (message) => {
@@ -184,36 +204,11 @@ export function Template1() {
     }
   };
 
-  // Detección de inactividad
-  const handleUserActivity = useCallback(() => {
-    setIsInactive(false); // Marca como activo
-    if (timer) clearTimeout(timer); // Resetea el temporizador
-    setTimer(setTimeout(() => setIsInactive(true), 60000)); // 1 minuto de inactividad
-  }, [timer]);
-
-  useEffect(() => {
-    // Configura los eventos para detectar actividad
-    window.addEventListener("mousemove", handleUserActivity);
-    window.addEventListener("keydown", handleUserActivity);
-    window.addEventListener("click", handleUserActivity);
-
-    return () => {
-      // Limpia los eventos al desmontar
-      window.removeEventListener("mousemove", handleUserActivity);
-      window.removeEventListener("keydown", handleUserActivity);
-      window.removeEventListener("click", handleUserActivity);
-    };
-  }, [handleUserActivity]);
-
-  // Redirige al carrusel de publicidad si está inactivo
-  useEffect(() => {
-    if (isInactive) {
-      navigate("/TotemAdvertising"); // Redirige al carrusel de publicidad
-    }
-  }, [isInactive, navigate]);
-
   return (
     <div className="relative h-screen w-screen">
+      {/* Incorporamos TotemWebCamera */}
+      <TotemWebCamera cameraAvailable={handleGestureAction} />
+
       {/* Carrusel de fondo */}
       <Carrusel className="absolute inset-0 h-full w-full z-0" images={pics} />
 
@@ -257,7 +252,6 @@ export function Template1() {
                 <Popup>Destino: {highlightedNavItem}</Popup>
               </Marker>
             )}
-            {/* Dibujar la ruta si existe */}
             {routeCoords.length > 0 && (
               <Polyline positions={routeCoords} color="blue" />
             )}

@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
-// Comentar la importación de handpose si no lo necesitas temporalmente
-// import * as handpose from '@tensorflow-models/handpose';
-// import '@tensorflow/tfjs-backend-webgl';
-// import '@tensorflow/tfjs';
+ //Comentar la importación de handpose si no lo necesitas temporalmente
+ import * as handpose from '@tensorflow-models/handpose';
+ import '@tensorflow/tfjs-backend-webgl';
+import '@tensorflow/tfjs';
 
 function TotemWebCamera({ cameraAvailable }) {
 
@@ -11,7 +11,7 @@ function TotemWebCamera({ cameraAvailable }) {
 
     useEffect(() => {
         // Comentar temporalmente la configuración de la cámara
-        /*
+        
         const setupCamera = async () => {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true })
@@ -27,7 +27,7 @@ function TotemWebCamera({ cameraAvailable }) {
             }
         }
         setupCamera();
-        */
+        
 
         return () => { // Limpia el stream y los intervalos cuando se desmonte el componente
             if (webCamRef.current && webCamRef.current.srcObject) {
@@ -49,14 +49,15 @@ function TotemWebCamera({ cameraAvailable }) {
 
     useEffect(() => {
         // Comentar la carga del modelo de Handpose y la detección
-        /*
+        
         const runHandpose = async () => {
             const net = await handpose.load();
             console.log('Handpose model loaded');
 
             intervalRef.current = setInterval(async () => {
                 await detect(net);
-            }, 1000);
+              }, 1500); // Detectar gestos cada 1.5 segundos
+              
         }
 
         const detect = async (net) => {
@@ -78,7 +79,7 @@ function TotemWebCamera({ cameraAvailable }) {
             }
         };
         runHandpose();
-        */
+        
 
         return () => {  // Limpiar detección
             if (intervalRef.current) {
