@@ -1,5 +1,5 @@
-import React, { useEffect, useState, useCallback } from "react";
-import { Avatar, Typography } from "@material-tailwind/react";
+import React, { useEffect, useState } from "react";
+import { Typography } from "@material-tailwind/react";
 import { MapPinIcon } from "@heroicons/react/24/solid";
 import Carrusel from "./Carrusel";
 import { pics } from "./Data";
@@ -9,9 +9,7 @@ import { useSelector } from "react-redux";
 import connectionString from "../../components/connections/connection";
 import useSpeechRecognition from "../../components/hooks/useSpeechRecognition";
 import axios from "axios";
-import TotemAdvertising from "../Advertising/TotemAdvertising.jsx";
-import TotemWebCamera from "./../../components/web_cam/TotemWebCamera.jsx"; // Importamos el componente de gestos
-
+import TotemWebCamera from "./../../components/web_cam/TotemWebCamera.jsx";
 
 // Importando Leaflet y el CSS
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from "react-leaflet";
@@ -57,8 +55,6 @@ export function Template1() {
   const [destination, setDestination] = useState(null); // Para guardar la ubicación de destino
   const [routeCoords, setRouteCoords] = useState([]); // Coordenadas de la ruta
   const [awaitingConfirmation, setAwaitingConfirmation] = useState(false); // Controla la confirmación de ubicación
-  const [isInactive, setIsInactive] = useState(false); // Para manejar inactividad
-  const [timer, setTimer] = useState(null); // Temporizador de inactividad
   const [gestureDetected, setGestureDetected] = useState(false); // Estado para gestos detectados
 
   const initialLocation = [-17.332983, -66.226246]; // Ubicación inicial de la app
@@ -97,7 +93,6 @@ export function Template1() {
       stopListening(); // Detiene el reconocimiento de voz si no hay gestos detectados
     }
   };
-  
 
   useEffect(() => {
     if (gestureDetected) {
@@ -213,7 +208,8 @@ export function Template1() {
       <Carrusel className="absolute inset-0 h-full w-full z-0" images={pics} />
 
       <div className="absolute inset-0 bg-opacity-50 z-10 flex flex-col items-center justify-center">
-        <Timer time={3000} route={"/TotemAdvertising"} />
+        {/* Temporizador ajustado */}
+        <Timer inactivityTime={25} route={"/TotemAdvertising"} isListening={isListening} />
 
         <Typography variant="h2" color="white" className="mb-4">
           Bienvenidos
