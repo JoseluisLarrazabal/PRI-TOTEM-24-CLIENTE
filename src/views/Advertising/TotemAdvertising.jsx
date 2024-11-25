@@ -5,6 +5,7 @@ import axios from "axios";
 import { useSelector } from "react-redux";
 import connectionString from "../../components/connections/connection";
 import { useNavigate } from "react-router-dom";
+import TotemWebCamera from "./../../components/web_cam/TotemWebCamera.jsx";
 
 function TotemAdvertising() {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -12,7 +13,7 @@ function TotemAdvertising() {
   const totem = useSelector((state) => state.totem);
   const navigate = useNavigate();
 
-  // Cargar las publicidades relacionadas al tótem
+  // Función para cargar las publicidades relacionadas al tótem
   const loadPublicidades = () => {
     axios
       .get(connectionString + `/PublicidadT/${totem.idTotem}`)
@@ -24,11 +25,18 @@ function TotemAdvertising() {
       });
   };
 
+  // Detectar gestos para salir de la publicidad
+  const handleGestureAction = (status) => {
+    if (status > 0) {
+      navigate("/Template"); // Redirigir al template principal
+    }
+  };
+
   useEffect(() => {
     loadPublicidades();
   }, []);
 
-  // Manejar el cambio de imágenes en el carrusel
+  // Manejar el cambio automático de imágenes en el carrusel
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveIndex((prevIndex) => (prevIndex + 1) % publicidades.length);
@@ -54,6 +62,9 @@ function TotemAdvertising() {
 
   return (
     <div className="w-screen h-screen flex items-center justify-center">
+      {/* Integrar TotemWebCamera */}
+      <TotemWebCamera cameraAvailable={handleGestureAction} />
+
       <Carousel
         className=""
         showThumbs={false}

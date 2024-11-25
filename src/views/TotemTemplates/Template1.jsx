@@ -56,9 +56,10 @@ export function Template1() {
   const [routeCoords, setRouteCoords] = useState([]); // Coordenadas de la ruta
   const [awaitingConfirmation, setAwaitingConfirmation] = useState(false); // Controla la confirmación de ubicación
   const [gestureDetected, setGestureDetected] = useState(false); // Estado para gestos detectados
+  const [showAd, setShowAd] = useState(false); // La publicidad empieza inactiva
+  const { startListening, stopListening, isListening } = useSpeechRecognition(handleSubmit);
 
   const initialLocation = [-17.332983, -66.226246]; // Ubicación inicial de la app
-  const { startListening, stopListening, isListening } = useSpeechRecognition(handleSubmit);
 
   useEffect(() => {
     // Recuperar ubicaciones filtradas por tótem
@@ -85,14 +86,20 @@ export function Template1() {
 
   // Función para manejar la acción cuando se detecta un gesto
   const handleGestureAction = (status) => {
-    if (status > 0 && !isListening) { // Solo activar si no está escuchando
-      setGestureDetected(true);
-      startListening(); // Activa el reconocimiento de voz al detectar un gesto
-    } else if (status === 0 && isListening) { // Detener si ya no hay gestos y está escuchando
+  if (status > 0 && !gestureDetected) {
+    setGestureDetected(true);
+    setShowAd(false); // Ocultar publicidad al detectar el gesto
+    startListening(); // Activar el micrófono
+
+    // Detener automáticamente el micrófono tras 5 segundos
+    setTimeout(() => {
+      stopListening();
       setGestureDetected(false);
-      stopListening(); // Detiene el reconocimiento de voz si no hay gestos detectados
-    }
-  };
+    }, 5000);
+  }
+};
+
+  
 
   useEffect(() => {
     if (gestureDetected) {
@@ -168,7 +175,9 @@ export function Template1() {
         const coordinates = route.map((coord) => [coord[1], coord[0]]);
         setRouteCoords([initialLocation, ...coordinates]); // Asegura que la ruta comience desde la ubicación inicial
         setAwaitingConfirmation(true);
-        speakMessage("La ubicación es correcta? Responda con 'Sí es correcta' o 'No es correcta' para continuar.");
+        speakMessage(
+          "La ubicación es correcta? Responda con 'Sí' o 'No' para continuar."
+        );
       } else {
         speakMessage("No se encontró una ruta viable. Intente otra ubicación.");
       }
@@ -190,10 +199,10 @@ export function Template1() {
   const handleConfirmationResponse = (response) => {
     const lowerResponse = response.toLowerCase();
 
-    if (lowerResponse.includes("sí es correcta")) {
+    if (lowerResponse.includes("sí")) {
       speakMessage("Perfecto!. Muchas gracias y suerte en su aventura!");
       resetMap();
-    } else if (lowerResponse.includes("no es correcta")) {
+    } else if (lowerResponse.includes("no")) {
       speakMessage("Lo siento, intentemos de nuevo. Por favor, indique otra ubicación.");
       resetMap();
     }
@@ -201,6 +210,16 @@ export function Template1() {
 
   return (
     <div className="relative h-screen w-screen">
+      {/* Publicidad */}
+      {showAd && (
+        <div className="absolute inset-0 bg-black flex items-center justify-center z-50 pointer-events-none">
+          <Typography variant="h4" color="white">
+            Publicidad Activa
+          </Typography>
+        </div>
+      )}
+
+
       {/* Incorporamos TotemWebCamera */}
       <TotemWebCamera cameraAvailable={handleGestureAction} />
 
@@ -211,7 +230,7 @@ export function Template1() {
         {/* Temporizador ajustado */}
         <Timer inactivityTime={25} route={"/TotemAdvertising"} isListening={isListening} />
 
-        <Typography variant="h2" color="white" className="mb-4">
+        <Typography variant="h2" color="white" className="        mb-4">
           Bienvenidos
         </Typography>
 
@@ -225,7 +244,8 @@ export function Template1() {
           {keywords.map((item) => (
             <span
               key={item}
-              className={`px-4 py-2 font-medium ${highlightedNavItem === item ? "bg-green-500 text-white" : ""}`}
+              className={`px-4 py-2 font-medium ${highlightedNavItem === item ? "bg-green-500 text-white" : ""
+                }`}
             >
               {item}
             </span>
@@ -234,7 +254,11 @@ export function Template1() {
 
         {/* Contenedor del Mapa */}
         <div className="w-4/5 h-2/3 mt-6">
-          <MapContainer center={initialLocation} zoom={13} style={{ height: "100%", width: "100%" }}>
+          <MapContainer
+            center={initialLocation}
+            zoom={13}
+            style={{ height: "100%", width: "100%" }}
+          >
             <TileLayer
               url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
@@ -259,7 +283,10 @@ export function Template1() {
 
         {/* Botón para iniciar la escucha por voz */}
         <div className="mt-6">
-          <button onClick={startListening} className="bg-green-500 text-white font-bold py-2 px-4 rounded">
+          <button
+            onClick={startListening}
+            className="bg-green-500 text-white font-bold py-2 px-4 rounded"
+          >
             {isListening ? "Escuchando..." : "Iniciar"}
           </button>
         </div>
