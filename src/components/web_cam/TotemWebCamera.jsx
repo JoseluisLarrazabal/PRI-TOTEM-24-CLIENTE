@@ -8,6 +8,21 @@ function TotemWebCamera({ cameraAvailable }) {
   const intervalRef = useRef(null);
 
   useEffect(() => {
+    // Pre-cargar el modelo Handpose
+    const preloadModel = async () => {
+      try {
+        console.log("Cargando modelo Handpose...");
+        await handpose.load();
+        console.log("Modelo Handpose cargado.");
+      } catch (error) {
+        console.error("Error al cargar el modelo Handpose:", error);
+      }
+    };
+
+    preloadModel();
+  }, []);
+
+  useEffect(() => {
     const setupCamera = async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -42,11 +57,11 @@ function TotemWebCamera({ cameraAvailable }) {
   useEffect(() => {
     const runHandpose = async () => {
       const net = await handpose.load();
-      console.log("Modelo Handpose cargado");
+      console.log("Modelo Handpose cargado y listo para detectar.");
 
       intervalRef.current = setInterval(async () => {
         await detect(net);
-      }, 300); // Detectar manos cada 300ms
+      }, 500); // Detectar manos cada 500ms
     };
 
     const detect = async (net) => {
@@ -86,4 +101,3 @@ function TotemWebCamera({ cameraAvailable }) {
 }
 
 export default TotemWebCamera;
-

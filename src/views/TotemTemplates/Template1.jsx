@@ -86,20 +86,20 @@ export function Template1() {
 
   // Función para manejar la acción cuando se detecta un gesto
   const handleGestureAction = (status) => {
-  if (status > 0 && !gestureDetected) {
-    setGestureDetected(true);
-    setShowAd(false); // Ocultar publicidad al detectar el gesto
-    startListening(); // Activar el micrófono
+    if (status > 0 && !gestureDetected) {
+      setGestureDetected(true);
+      setShowAd(false); // Ocultar publicidad al detectar el gesto
+      startListening(); // Activar el micrófono
 
-    // Detener automáticamente el micrófono tras 5 segundos
-    setTimeout(() => {
-      stopListening();
-      setGestureDetected(false);
-    }, 5000);
-  }
-};
+      // Detener automáticamente el micrófono tras 5 segundos
+      setTimeout(() => {
+        stopListening();
+        setGestureDetected(false);
+      }, 5000);
+    }
+  };
 
-  
+
 
   useEffect(() => {
     if (gestureDetected) {
@@ -107,14 +107,40 @@ export function Template1() {
     }
   }, [gestureDetected]);
 
-  // Función para usar ResponsiveVoice
+
   const speakMessage = (message) => {
-    if (typeof responsiveVoice !== "undefined") {
-      responsiveVoice.speak(message, "Spanish Latin American Female");
+    if ("speechSynthesis" in window) {
+      const synth = window.speechSynthesis;
+      const utteranceQueue = [];
+  
+      
+      // Dividir el texto en fragmentos (máximo 200 caracteres para evitar errores)
+      const chunks = message.match(/.{1,200}(\s|$)/g);
+  
+      chunks.forEach((chunk) => {
+        const utterance = new SpeechSynthesisUtterance(chunk);
+        utterance.lang = "es-ES"; // Idioma español
+        utterance.rate = 1; // Velocidad de la voz (ajusta si es necesario)
+        utterance.pitch = 1; // Tono de la voz
+        utteranceQueue.push(utterance);
+      });
+  
+      // Reproducir cada fragmento de manera secuencial
+      const speakNext = () => {
+        if (utteranceQueue.length > 0) {
+          const utterance = utteranceQueue.shift();
+          utterance.onend = speakNext; // Continuar con el siguiente fragmento
+          synth.speak(utterance);
+        }
+      };
+  
+      speakNext(); // Iniciar la reproducción de los fragmentos
     } else {
-      console.error("ResponsiveVoice no está disponible.");
+      console.error("El navegador no soporta SpeechSynthesis.");
     }
   };
+  
+
 
   // Función para manejar la búsqueda por voz
   function handleSubmit(textToSearch) {
@@ -129,12 +155,56 @@ export function Template1() {
     );
 
     if (recognizedLocation) {
+      // Flujo A: Procesar ubicación
       setHighlightedNavItem(recognizedLocation);
+      speakMessage(`Ubicación reconocida: ${recognizedLocation}. Procesando...`);
       checkLocationInDatabase(recognizedLocation);
     } else {
-      speakMessage("No encontré la ubicación. Por favor, inténtelo de nuevo.");
+      // Flujo B: Procesar consulta de texto en el archivo asociado
+      speakMessage("No encontré una ubicación válida. Procesando consulta en el archivo asociado.");
+      handlePdfQuery(textToSearch);
     }
   }
+
+  const handlePdfQuery = async (query) => {
+    if (!totem?.idTotem) {
+      console.error("No hay un tótem seleccionado.");
+      return;
+    }
+
+    try {
+      // Recuperar los archivos asociados al tótem
+      const archivosResponse = await axios.get(
+        `${connectionString}/Archivo/Totem/${totem.idTotem}`
+      );
+
+      if (!archivosResponse.data || archivosResponse.data.length === 0) {
+        console.warn("No se encontraron archivos asociados al tótem.");
+        return;
+      }
+
+      // Tomar el primer archivo como ejemplo
+      const archivoId = archivosResponse.data[0].id;
+
+      // Enviar la pregunta al archivo
+      const preguntaResponse = await axios.post(
+        `${connectionString}/Archivo/Pregunta/${archivoId}`,
+        { pregunta: query }
+      );
+
+      if (preguntaResponse.data) {
+        console.log("Respuesta de Claude:", preguntaResponse.data);
+        speakMessage(preguntaResponse.data); // Habla la respuesta
+      } else {
+        console.warn("Claude no devolvió una respuesta válida.");
+      }
+    } catch (error) {
+      console.error("Error al procesar la consulta al archivo:", error);
+    }
+  };
+
+
+
 
   // Verifica si la ubicación reconocida está en la base de datos
   const checkLocationInDatabase = async (recognizedLocation) => {
@@ -227,8 +297,10 @@ export function Template1() {
       <Carrusel className="absolute inset-0 h-full w-full z-0" images={pics} />
 
       <div className="absolute inset-0 bg-opacity-50 z-10 flex flex-col items-center justify-center">
-        {/* Temporizador ajustado */}
-        <Timer inactivityTime={25} route={"/TotemAdvertising"} isListening={isListening} />
+        {/* Temporizador ajustado (oculto) */}
+        <div style={{ display: "none" }}>
+          <Timer inactivityTime={25} route={"/TotemAdvertising"} isListening={isListening} />
+        </div>
 
         <Typography variant="h2" color="white" className="        mb-4">
           Bienvenidos
@@ -239,18 +311,20 @@ export function Template1() {
           <Typography className="font-medium text-white">Cochabamba, Bolivia</Typography>
         </div>
 
-        {/* Navbar de palabras clave */}
-        <div className="flex justify-center space-x-4 mt-4">
+        {/* Navbar de palabras clave (oculto) */}
+        <div
+          style={{ display: "none" }} // Oculta el navbar
+        >
           {keywords.map((item) => (
             <span
               key={item}
-              className={`px-4 py-2 font-medium ${highlightedNavItem === item ? "bg-green-500 text-white" : ""
-                }`}
+              className={`px-4 py-2 font-medium ${highlightedNavItem === item ? "bg-green-500 text-white" : ""}`}
             >
               {item}
             </span>
           ))}
         </div>
+
 
         {/* Contenedor del Mapa */}
         <div className="w-4/5 h-2/3 mt-6">
