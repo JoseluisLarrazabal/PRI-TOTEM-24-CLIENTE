@@ -8,7 +8,7 @@ if ("webkitSpeechRecognition" in window) {
     recognition.lang = "es-ES"; // Establece el idioma a español (España)
 }
 
-const useSpeechRecognition = (Search) => {
+const useSpeechRecognition = (Search, isSpeaking) => {
     const [text, setText] = useState("");
     const [isListening, setIsListening] = useState(false);
 
@@ -20,9 +20,6 @@ const useSpeechRecognition = (Search) => {
             
             // Aquí formateamos el texto para que la primera letra sea mayúscula y el resto minúsculas.
             const formattedTranscript = transcript.charAt(0).toUpperCase() + transcript.slice(1).toLowerCase();
-            
-            console.log("Texto reconocido y formateado:", formattedTranscript);
-            
             setText(formattedTranscript);
             recognition.stop();
             setIsListening(false);
@@ -31,16 +28,18 @@ const useSpeechRecognition = (Search) => {
             Search(formattedTranscript); // Llamamos con el texto formateado
         };
         
-
         recognition.onerror = (event) => {
             console.error("Error en el reconocimiento de voz:", event.error);
             setIsListening(false);
             recognition.stop();
         };
-        
     }, [Search]);
 
     const startListening = () => {
+        if (isSpeaking) {
+            return;
+        }
+
         setText(""); // Limpia el texto antes de comenzar
         setIsListening(true);
         recognition.start(); // Inicia el reconocimiento

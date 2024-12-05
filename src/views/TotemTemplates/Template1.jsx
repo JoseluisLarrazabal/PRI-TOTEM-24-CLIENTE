@@ -58,6 +58,9 @@ export function Template1() {
   const [gestureDetected, setGestureDetected] = useState(false); // Estado para gestos detectados
   const [showAd, setShowAd] = useState(false); // La publicidad empieza inactiva
   const { startListening, stopListening, isListening } = useSpeechRecognition(handleSubmit);
+  const [isSpeaking, setIsSpeaking] = useState(false); // Estado para saber si está hablando
+
+  
 
   const initialLocation = [-17.332983, -66.226246]; // Ubicación inicial de la app
 
@@ -86,18 +89,45 @@ export function Template1() {
 
   // Función para manejar la acción cuando se detecta un gesto
   const handleGestureAction = (status) => {
-    if (status > 0 && !gestureDetected) {
-      setGestureDetected(true);
-      setShowAd(false); // Ocultar publicidad al detectar el gesto
-      startListening(); // Activar el micrófono
-
-      // Detener automáticamente el micrófono tras 5 segundos
-      setTimeout(() => {
-        stopListening();
-        setGestureDetected(false);
-      }, 5000);
+    if (status > 0) {
+      if (isSpeaking) {
+        console.log("El micrófono no se activa porque isSpeaking es true.");
+        return; // No activa el micrófono si está hablando
+      }
+  
+      if (!gestureDetected) {
+        console.log("Gesto detectado, iniciando reconocimiento de voz...");
+        setGestureDetected(true);
+        setShowAd(false); // Ocultar publicidad al detectar el gesto
+        startListening(); // Activar el micrófono
+  
+        // Detener automáticamente el micrófono tras 10 segundos
+        setTimeout(() => {
+          stopListening();
+          setGestureDetected(false);
+        }, 10000);
+      }
     }
   };
+  
+
+
+
+  useEffect(() => {
+    const handleKeyPress = (event) => {
+      if (event.key === 'Enter' && !isSpeaking) { // Solo si no está hablando
+        startListening(); // Activa el micrófono
+      }
+    };
+
+    // Escuchar el evento de la tecla
+    window.addEventListener('keydown', handleKeyPress);
+
+    // Limpiar el evento cuando el componente se desmonte
+    return () => {
+      window.removeEventListener('keydown', handleKeyPress);
+    };
+  }, [isSpeaking]); // Dependencia de isSpeaking para evitar que se active cuando está hablando
 
 
 
@@ -112,34 +142,55 @@ export function Template1() {
     if ("speechSynthesis" in window) {
       const synth = window.speechSynthesis;
       const utteranceQueue = [];
-  
-      
-      // Dividir el texto en fragmentos (máximo 200 caracteres para evitar errores)
+
+      // Dividir el mensaje en fragmentos (máximo 200 caracteres para evitar errores)
       const chunks = message.match(/.{1,200}(\s|$)/g);
-  
+
+      // Crear objetos `SpeechSynthesisUtterance` para cada fragmento
       chunks.forEach((chunk) => {
         const utterance = new SpeechSynthesisUtterance(chunk);
         utterance.lang = "es-ES"; // Idioma español
-        utterance.rate = 1; // Velocidad de la voz (ajusta si es necesario)
+        utterance.rate = 1; // Velocidad de la voz
         utterance.pitch = 1; // Tono de la voz
+
+        // Eventos para controlar el estado de reproducción
+        utterance.onstart = () => {
+          console.log(`Reproduciendo fragmento: "${chunk}"`);
+          setIsSpeaking(true);
+        };
+
+        utterance.onend = () => {
+          console.log(`Fragmento terminado: "${chunk}"`);
+          speakNext(); // Reproducir el siguiente fragmento en la cola
+        };
+
+        utterance.onerror = (e) => {
+          console.error("Error al reproducir el mensaje:", e);
+          setIsSpeaking(false);
+        };
+
         utteranceQueue.push(utterance);
       });
-  
-      // Reproducir cada fragmento de manera secuencial
+
+      // Reproducir los fragmentos secuencialmente
       const speakNext = () => {
         if (utteranceQueue.length > 0) {
           const utterance = utteranceQueue.shift();
-          utterance.onend = speakNext; // Continuar con el siguiente fragmento
-          synth.speak(utterance);
+          synth.speak(utterance); // Reproducir el siguiente fragmento
+        } else {
+          console.log("Todos los fragmentos han sido reproducidos.");
+          setIsSpeaking(false); // Cambiar el estado cuando termina todo el mensaje
         }
       };
-  
-      speakNext(); // Iniciar la reproducción de los fragmentos
+
+      speakNext(); // Inicia la reproducción
     } else {
       console.error("El navegador no soporta SpeechSynthesis.");
     }
   };
-  
+
+
+
 
 
   // Función para manejar la búsqueda por voz
@@ -157,51 +208,65 @@ export function Template1() {
     if (recognizedLocation) {
       // Flujo A: Procesar ubicación
       setHighlightedNavItem(recognizedLocation);
-      speakMessage(`Ubicación reconocida: ${recognizedLocation}. Procesando...`);
       checkLocationInDatabase(recognizedLocation);
     } else {
       // Flujo B: Procesar consulta de texto en el archivo asociado
-      speakMessage("No encontré una ubicación válida. Procesando consulta en el archivo asociado.");
-      handlePdfQuery(textToSearch);
+      setIsSpeaking(true); // Indica que el sistema está ocupado
+      handlePdfQuery(textToSearch)
+        .then(() => {
+          // El estado `isSpeaking` volverá a false automáticamente dentro de `speakMessage`
+        })
+        .catch((error) => {
+          console.error("Error al manejar la consulta de texto:", error);
+          setIsSpeaking(false); // Reinicia el estado en caso de error
+        });
     }
   }
 
   const handlePdfQuery = async (query) => {
     if (!totem?.idTotem) {
-      console.error("No hay un tótem seleccionado.");
-      return;
+        console.error("No hay un tótem seleccionado.");
+        return;
     }
 
     try {
-      // Recuperar los archivos asociados al tótem
-      const archivosResponse = await axios.get(
-        `${connectionString}/Archivo/Totem/${totem.idTotem}`
-      );
+        // Establece isSpeaking en true para bloquear cualquier activación de micrófono
+        setIsSpeaking(true);
 
-      if (!archivosResponse.data || archivosResponse.data.length === 0) {
-        console.warn("No se encontraron archivos asociados al tótem.");
-        return;
-      }
+        // Recuperar los archivos asociados al tótem
+        const archivosResponse = await axios.get(
+            `${connectionString}/Archivo/Totem/${totem.idTotem}`
+        );
 
-      // Tomar el primer archivo como ejemplo
-      const archivoId = archivosResponse.data[0].id;
+        if (!archivosResponse.data || archivosResponse.data.length === 0) {
+            console.warn("No se encontraron archivos asociados al tótem.");
+            setIsSpeaking(false); // Reinicia el estado si no hay archivos
+            return;
+        }
 
-      // Enviar la pregunta al archivo
-      const preguntaResponse = await axios.post(
-        `${connectionString}/Archivo/Pregunta/${archivoId}`,
-        { pregunta: query }
-      );
+        // Tomar el primer archivo como ejemplo
+        const archivoId = archivosResponse.data[0].id;
 
-      if (preguntaResponse.data) {
-        console.log("Respuesta de Claude:", preguntaResponse.data);
-        speakMessage(preguntaResponse.data); // Habla la respuesta
-      } else {
-        console.warn("Claude no devolvió una respuesta válida.");
-      }
+        // Enviar la pregunta al archivo
+        const preguntaResponse = await axios.post(
+            `${connectionString}/Archivo/Pregunta/${archivoId}`,
+            { pregunta: query }
+        );
+
+        if (preguntaResponse.data) {
+            console.log("Respuesta de Claude:", preguntaResponse.data);
+
+            // Habla la respuesta (gestiona automáticamente isSpeaking dentro de speakMessage)
+            speakMessage(preguntaResponse.data);
+        } else {
+            console.warn("Claude no devolvió una respuesta válida.");
+            setIsSpeaking(false); // Reinicia el estado si no hay respuesta
+        }
     } catch (error) {
-      console.error("Error al procesar la consulta al archivo:", error);
+        console.error("Error al procesar la consulta al archivo:", error);
+        setIsSpeaking(false); // Reinicia el estado en caso de error
     }
-  };
+};
 
 
 
@@ -219,11 +284,9 @@ export function Template1() {
         setDestination([latitud, longitud]);
         drawRoute([latitud, longitud]);
       } else {
-        speakMessage("No se encontró una ubicación válida en la base de datos.");
       }
     } catch (error) {
-      console.error("Error al verificar la ubicación en la base de datos:", error);
-      speakMessage("Ocurrió un error al buscar la ubicación.");
+      console.error("Error al verificar la ubicación en la base de datos:", error)
     }
   };
 
@@ -253,7 +316,6 @@ export function Template1() {
       }
     } catch (error) {
       console.error("Error al obtener la ruta de Mapbox Directions API:", error);
-      speakMessage("Ocurrió un error al calcular la ruta.");
     }
   };
 
@@ -270,13 +332,16 @@ export function Template1() {
     const lowerResponse = response.toLowerCase();
 
     if (lowerResponse.includes("sí")) {
+      setIsSpeaking(true); // Marca como hablando antes de iniciar `speakMessage`
       speakMessage("Perfecto!. Muchas gracias y suerte en su aventura!");
       resetMap();
     } else if (lowerResponse.includes("no")) {
+      setIsSpeaking(true); // Marca como hablando antes de iniciar `speakMessage`
       speakMessage("Lo siento, intentemos de nuevo. Por favor, indique otra ubicación.");
       resetMap();
     }
   };
+
 
   return (
     <div className="relative h-screen w-screen">
@@ -291,7 +356,13 @@ export function Template1() {
 
 
       {/* Incorporamos TotemWebCamera */}
-      <TotemWebCamera cameraAvailable={handleGestureAction} />
+      <TotemWebCamera
+        cameraAvailable={(status) => {
+          console.log("Estado del gesto detectado:", status);
+          handleGestureAction(status);
+        }}
+      />
+
 
       {/* Carrusel de fondo */}
       <Carrusel className="absolute inset-0 h-full w-full z-0" images={pics} />
@@ -299,7 +370,7 @@ export function Template1() {
       <div className="absolute inset-0 bg-opacity-50 z-10 flex flex-col items-center justify-center">
         {/* Temporizador ajustado (oculto) */}
         <div style={{ display: "none" }}>
-          <Timer inactivityTime={25} route={"/TotemAdvertising"} isListening={isListening} />
+          <Timer inactivityTime={60} route={"/TotemAdvertising"} isListening={isListening} />
         </div>
 
         <Typography variant="h2" color="white" className="        mb-4">
@@ -358,11 +429,14 @@ export function Template1() {
         {/* Botón para iniciar la escucha por voz */}
         <div className="mt-6">
           <button
-            onClick={startListening}
-            className="bg-green-500 text-white font-bold py-2 px-4 rounded"
+            onClick={() => !isSpeaking && startListening()} // Bloquea si está hablando
+            className={`bg-green-500 text-white font-bold py-2 px-4 rounded ${isSpeaking ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            disabled={isSpeaking} // Desactiva el botón mientras se habla
           >
             {isListening ? "Escuchando..." : "Iniciar"}
           </button>
+
         </div>
       </div>
     </div>
